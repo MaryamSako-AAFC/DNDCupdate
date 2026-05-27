@@ -1,0 +1,19 @@
+
+	// Dndc71.idl : IDL source for Dndc71.exe
+//
+// This file will be processed by the MIDL tool to
+// produce the type library (Dndc71.tlb) and marshalling code.
+import "oaidl.idl";
+import "ocidl.idl";
+[
+	uuid(256C4B34-FECE-4EC2-924A-89DDED1C5BA4),
+	version(1.0),
+	helpstring("Dndc71 1.0 Type Library")
+]
+library Dndc71Lib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+};
+
+	

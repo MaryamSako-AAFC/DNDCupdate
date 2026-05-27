@@ -1,0 +1,10 @@
+{
+  "FileVersion": 2,
+  "Id": "1c54eeef-00c4-4ea1-b415-9282379ec0e8",
+  "Items": [
+    {
+      "Id": "e2613e7d-6d98-4b71-b508-69fe5bb4190a",
+      "Command": "-output D:\\Batch2 -s D:\\DNDC\\W5E5_batchout.txt -root D:\\dndc -daily 1"
+    }
+  ]
+}

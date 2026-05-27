@@ -1,0 +1,657 @@
+float class_model::crop_transpiration(int irri_close, float PPTw, int ccwc)
+{
+	int l, hr=1;
+	float Fptt, LayerWaterDemand, LayerTrans, limit1;
+	float LayerH2Odemand = 0.0;
+	int root_layer = (int)(root_length[ccwc]/h[1]); 
+	if (root_layer<1) root_layer=1;
+	if(root_layer>q) root_layer = q;
+		float cropAvailableWater,totalAvailableWater;//brian parameters added to see if soil water status can be added.
+	float LayerCropWaterDeficit=0.0;
+	DayCropWaterDeficit=0.0;
+		//DayPT0: daily all crops demand for water, mm
+	
+	DayPT1 = 0.0;//daily water taken by crops from soil
+	
+
+	
+	//1: crop get water from soil profile
+	if(PPTw>0.0 && snow_pack==0.0)//total_ice==0.0
+	{
+		//root_layer = q; //this will allow all layers to contribute ... turning off for use with root density function
+		LayerDeficit = 0.0;		
+      soilWaterStress=0.0;
+float rootDensityTotal=0.0;
+for(int lz=1; lz<=q;lz++)
+{
+	if(rootDensity[ccwc][lz]>0.0)
+		root_layer=lz;
+}
+
+		for (l=1; l<=root_layer; l++)//was q  root_layer
+		{
+			if(rootDensity[ccwc][1]<=0.0)rootDensity[ccwc][1]=1.0;
+			if(rootDensity[ccwc][l]<0.0)rootDensity[ccwc][l]=0.0;
+
+
+			
+
+
+			if(nWTL>l)//water Table is below layer
+			{
+				
+			if(PerennialFlag[ccwc]==0 ||PerennialFlag[ccwc]==1)
+			{
+				rootDensityTotal+=rootDensity[ccwc][l];
+				//LayerH2Odemand = PPTw / (float)q;//* powf(0.5, l) ;//+ DayCropWaterDeficit
+				LayerH2Odemand = (PPTw * rootDensity[ccwc][l]);//+ (LayerCropWaterDeficit*0.995);//*0.975//+ LayerCropWaterDeficit;// + LayerCropWaterDeficit;//+ DayCropWaterDeficit;//* powf(0.5, l) ;//+ DayCropWaterDeficit
+				
+			
+
+
+
+			}
+			else
+			{
+			LayerH2Odemand = PPTw / (float)q;// evenly divided water requirement per layer if perrenial //+ DayCropWaterDeficit;//* powf(0.5, l) ;//+ DayCropWaterDeficit
+			}
+
+
+
+			float wiltptw = h[l] * sts[l] * wiltpt[l];
+			float fldcapw = h[l] * sts[l] * fldcap[l];
+			
+			/*
+				if(l==1)
+				{
+				CString TESTFILE;
+						FILE *pFile=NULL;
+
+						TESTFILE.Format("%s\\Record\\WaterDemand.txt", OUTPUT);
+						pFile = fopen (TESTFILE,"a");
+						fprintf(pFile, "%1d,%1d,%1d,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f\n",jday,year,l,LayerH2Odemand*1000,LayerCropWaterDeficit*1000,rootDensity[ccwc][l],root_length[ccwc],PPTw*1000,wiltptw*1000,water[1][l]*1000);
+						fclose (pFile);
+				}
+				if(l==5)
+				{
+				CString TESTFILE;
+						FILE *pFile=NULL;
+
+						TESTFILE.Format("%s\\Record\\WaterDemand.txt", OUTPUT);
+						pFile = fopen (TESTFILE,"a");
+						fprintf(pFile, "%1d,%1d,%1d,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f\n",jday,year,l,LayerH2Odemand*1000,LayerCropWaterDeficit*1000,rootDensity[ccwc][l],root_length[ccwc],PPTw*1000,wiltptw*1000,water[1][l]*1000);
+						fclose (pFile);
+				}
+				if(l==10)
+				{
+				CString TESTFILE;
+						FILE *pFile=NULL;
+
+						TESTFILE.Format("%s\\Record\\WaterDemand.txt", OUTPUT);
+						pFile = fopen (TESTFILE,"a");
+						fprintf(pFile, "%1d,%1d,%1d,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f\n",jday,year,l,LayerH2Odemand*1000,LayerCropWaterDeficit*1000,rootDensity[ccwc][l],root_length[ccwc],PPTw*1000,wiltptw*1000,water[1][l]*1000);
+						fclose (pFile);
+				}
+			*/	
+
+
+			totalAvailableWater=fldcapw-wiltptw;
+			
+
+			if(FilmEffect>0.0) wiltptw *= (1.0 - FilmEffect);
+
+			if(water[1][l]<=wiltptw)
+			{
+				LayerTrans = 0.0;
+				LayerCropWaterDeficit+=LayerH2Odemand;//trans1
+				DayCropWaterDeficit+=LayerH2Odemand;
+			}
+			else
+			{
+				float Firri=1.0;
+			
+				//float Fptt = Firri * (water[1][l] - wiltptw);//old way introducing a reduction in water requirement
+			//	float Fptt = Firri * pow((water[1][l] - wiltptw),1.65);
+				
+				float Fptt;
+				if(DrainEfficiency==1)
+				{Fptt= Firri * (water[1][l] - wiltptw);}//no water table
+				else
+				{
+					float restrictionWT;
+					restrictionWT=1+(1-SwcWTEffect);
+					Fptt = Firri * pow((water[1][l] - wiltptw),restrictionWT);//1.65 default
+			     //Fptt= Firri * (water[1][l] - wiltptw);
+				}//water table
+
+				Fptt=max(0.0,Fptt);
+
+				if(Fptt>=LayerH2Odemand)
+				{
+					LayerTrans = LayerH2Odemand;
+					LayerH2Odemand = 0.0;	
+			//		DayCropWaterDeficit = 0.0;
+			//		LayerCropWaterDeficit=0.0;
+				}
+				else
+				{
+					LayerTrans = Fptt;
+					DayCropWaterDeficit += (LayerH2Odemand - Fptt);
+					LayerCropWaterDeficit+=(LayerH2Odemand - Fptt);//trans1
+				}
+
+
+/*
+			//brian trying to see if can get soil water status playing a role in determing water uptake capacity.
+			cropAvailableWater=water[1][l]-wiltptw;
+			if(cropAvailableWater<0)
+				cropAvailableWater=0.0;
+			soilWaterStress=cropAvailableWater/totalAvailableWater;
+				LayerTrans=LayerTrans*pow(soilWaterStress,1.0);
+			//end brian
+*/
+
+
+				water[1][l] -= LayerTrans;
+
+			
+				
+				if(water[1][l]<0.0)
+				{
+					LayerTrans += water[1][l];
+					water[1][l] = 0.0;
+				}
+				}
+
+			DayPT1 += LayerTrans;
+			LayerTrans = 0.0;
+			
+			}//end if(WTL>l)
+			else//if Water Table is in current layer
+			{
+				
+					LayerH2Odemand = (PPTw-DayPT1);//LayerDemand is equal to potential transpiration - actual transpiration + deficit
+					LayerH2Odemand = max(0.0, LayerH2Odemand);
+				
+
+
+			
+				
+			float wiltptw = h[l] * sts[l] * wiltpt[l];
+			float fldcapw = h[l] * sts[l] * fldcap[l];
+			
+			totalAvailableWater=fldcapw-wiltptw;
+			
+
+			if(FilmEffect>0.0) wiltptw *= (1.0 - FilmEffect);
+
+			if(water[1][l]<=wiltptw)//if water in layer is less than wilting point water then don't do any transpiration. Should never be case since WTL is in layer
+			{
+				LayerTrans = 0.0;//trans for this layer is zero
+				LayerCropWaterDeficit+=LayerH2Odemand; //layerCropWaterDeficit is set to whatever the demand was. //trans1
+				DayCropWaterDeficit+=LayerH2Odemand;
+			}
+			else
+			{
+				float Firri=1.0;
+			
+				float Fptt = Firri * (water[1][l] - fldcapw);//wiltptw drain to field capacity
+				Fptt=max(0.0,Fptt);
+
+				if(Fptt>=LayerH2Odemand)
+				{
+					LayerTrans = LayerH2Odemand;
+					LayerH2Odemand = 0.0;	
+				//	DayCropWaterDeficit = 0.0;
+				//	LayerCropWaterDeficit=0.0;
+				}
+				else
+				{
+					LayerTrans = Fptt;
+					DayCropWaterDeficit += (LayerH2Odemand - Fptt);
+					LayerCropWaterDeficit+=(LayerH2Odemand - Fptt);//trans1
+				}
+
+				
+
+
+/*
+			//brian trying to see if can get soil water status playing a role in determing water uptake capacity.
+			cropAvailableWater=water[1][l]-wiltptw;
+			if(cropAvailableWater<0)
+				cropAvailableWater=0.0;
+			soilWaterStress=cropAvailableWater/totalAvailableWater;
+				LayerTrans=LayerTrans*pow(soilWaterStress,1.0);
+			//end brian
+*/
+
+
+				water[1][l] -= LayerTrans;
+				if(water[1][l]<=fldcapw && nWTL==l)
+				{
+					nWTL+=1;
+					WTL+=1;
+					day_WT=-WTL*h[1];
+				}
+				
+				
+				if(water[1][l]<0.0)
+				{
+					LayerTrans += water[1][l];
+					water[1][l] = 0.0;
+				}
+			}
+
+			DayPT1 += LayerTrans;
+			LayerTrans = 0.0;
+			}//end else if(WTL<l)
+			
+		}//end of layer loop
+
+		//soilWaterStress=soilWaterStress/root_layer; //calculate soil Water Stress
+
+//seeing if remaining water in layers can meet demand.
+
+//phase 2
+
+
+	for (l=1; l<=root_layer; l++)//was q  root_layer
+		{
+			if(rootDensity[ccwc][1]<=0.0)rootDensity[ccwc][1]=1.0;
+			if(rootDensity[ccwc][l]<0.0)rootDensity[ccwc][l]=0.0;
+
+
+			
+
+
+			if(nWTL>l)//water Table is below layer
+			{
+				
+			if(PerennialFlag[ccwc]==0 ||PerennialFlag[ccwc]==1)
+			{
+				rootDensityTotal+=rootDensity[ccwc][l];
+				//LayerH2Odemand = PPTw / (float)q;//* powf(0.5, l) ;//+ DayCropWaterDeficit
+				LayerH2Odemand = LayerCropWaterDeficit;//+ (LayerCropWaterDeficit*0.995);//*0.975//+ LayerCropWaterDeficit;// + LayerCropWaterDeficit;//+ DayCropWaterDeficit;//* powf(0.5, l) ;//+ DayCropWaterDeficit
+				
+			
+
+
+
+			}
+			else
+			{
+			LayerH2Odemand = LayerCropWaterDeficit;// evenly divided water requirement per layer if perrenial //+ DayCropWaterDeficit;//* powf(0.5, l) ;//+ DayCropWaterDeficit
+			}
+
+
+
+			float wiltptw = h[l] * sts[l] * wiltpt[l];
+			float fldcapw = h[l] * sts[l] * fldcap[l];
+			/*	
+				if(l==1)
+				{
+				CString TESTFILE;
+						FILE *pFile=NULL;
+
+						TESTFILE.Format("%s\\Record\\WaterDemand.txt", OUTPUT);
+						pFile = fopen (TESTFILE,"a");
+						fprintf(pFile, "%1d,%1d,%1d,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f\n",jday,year,l,LayerH2Odemand*1000,LayerCropWaterDeficit*1000,rootDensity[ccwc][l],root_length[ccwc],PPTw*1000,wiltptw*1000,water[1][l]*1000);
+						fclose (pFile);
+				}
+				if(l==5)
+				{
+				CString TESTFILE;
+						FILE *pFile=NULL;
+
+						TESTFILE.Format("%s\\Record\\WaterDemand.txt", OUTPUT);
+						pFile = fopen (TESTFILE,"a");
+						fprintf(pFile, "%1d,%1d,%1d,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f\n",jday,year,l,LayerH2Odemand*1000,LayerCropWaterDeficit*1000,rootDensity[ccwc][l],root_length[ccwc],PPTw*1000,wiltptw*1000,water[1][l]*1000);
+						fclose (pFile);
+				}
+				if(l==10)
+				{
+				CString TESTFILE;
+						FILE *pFile=NULL;
+
+						TESTFILE.Format("%s\\Record\\WaterDemand.txt", OUTPUT);
+						pFile = fopen (TESTFILE,"a");
+						fprintf(pFile, "%1d,%1d,%1d,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f,%7.4f\n",jday,year,l,LayerH2Odemand*1000,LayerCropWaterDeficit*1000,rootDensity[ccwc][l],root_length[ccwc],PPTw*1000,wiltptw*1000,water[1][l]*1000);
+						fclose (pFile);
+				}
+			*/	
+
+
+			totalAvailableWater=fldcapw-wiltptw;
+			
+
+			if(FilmEffect>0.0) wiltptw *= (1.0 - FilmEffect);
+
+			if(water[1][l]<=wiltptw)
+			{
+				LayerTrans = 0.0;
+			//	LayerCropWaterDeficit+=LayerH2Odemand;//trans1
+			}
+			else
+			{
+				float Firri=1.0;
+			
+				//float Fptt = Firri * (water[1][l] - wiltptw);//old way introducing a reduction in water requirement
+			//	float Fptt = Firri * pow((water[1][l] - wiltptw),1.65);
+				
+				float Fptt;
+				if(DrainEfficiency==1)
+				{Fptt= Firri * (water[1][l] - wiltptw);}//no water table
+				else
+				{
+					float restrictionWT;
+					restrictionWT=1+(1-SwcWTEffect);
+					Fptt = Firri * pow((water[1][l] - wiltptw),restrictionWT);//1.65 default
+			     //Fptt= Firri * (water[1][l] - wiltptw);
+				}//water table
+
+				Fptt=max(0.0,Fptt);
+
+				if(Fptt>=LayerH2Odemand)
+				{
+					LayerTrans = LayerH2Odemand;
+					LayerH2Odemand = 0.0;	
+					DayCropWaterDeficit = 0.0;
+					LayerCropWaterDeficit=0.0;
+				}
+				else
+				{
+					LayerTrans = Fptt;
+					DayCropWaterDeficit -= (Fptt);
+					LayerCropWaterDeficit-=(Fptt);//trans1
+				}
+
+
+/*
+			//brian trying to see if can get soil water status playing a role in determing water uptake capacity.
+			cropAvailableWater=water[1][l]-wiltptw;
+			if(cropAvailableWater<0)
+				cropAvailableWater=0.0;
+			soilWaterStress=cropAvailableWater/totalAvailableWater;
+				LayerTrans=LayerTrans*pow(soilWaterStress,1.0);
+			//end brian
+*/
+
+
+				water[1][l] -= LayerTrans;
+
+			
+				
+				if(water[1][l]<0.0)
+				{
+					LayerTrans += water[1][l];
+					water[1][l] = 0.0;
+				}
+				}
+
+			DayPT1 += LayerTrans;
+			LayerTrans = 0.0;
+			
+			}//end if(WTL>l)
+			else//if Water Table is in current layer
+			{
+				
+					LayerH2Odemand = LayerCropWaterDeficit;//LayerDemand is equal to potential transpiration - actual transpiration + deficit
+					LayerH2Odemand = max(0.0, LayerH2Odemand);
+				
+
+
+			
+				
+			float wiltptw = h[l] * sts[l] * wiltpt[l];
+			float fldcapw = h[l] * sts[l] * fldcap[l];
+			
+			totalAvailableWater=fldcapw-wiltptw;
+			
+
+			if(FilmEffect>0.0) wiltptw *= (1.0 - FilmEffect);
+
+			if(water[1][l]<=wiltptw)//if water in layer is less than wilting point water then don't do any transpiration. Should never be case since WTL is in layer
+			{
+				LayerTrans = 0.0;//trans for this layer is zero
+			//	LayerCropWaterDeficit+=LayerH2Odemand; //layerCropWaterDeficit is set to whatever the demand was. //trans1
+			}
+			else
+			{
+				float Firri=1.0;
+			
+				float Fptt = Firri * (water[1][l] - fldcapw);//wiltptw drain to field capacity
+				Fptt=max(0.0,Fptt);
+
+				if(Fptt>=LayerH2Odemand)
+				{
+					LayerTrans = LayerH2Odemand;
+					LayerH2Odemand = 0.0;	
+					DayCropWaterDeficit = 0.0;
+					LayerCropWaterDeficit=0.0;
+				}
+				else
+				{
+					LayerTrans = Fptt;
+					DayCropWaterDeficit -= (Fptt);
+					LayerCropWaterDeficit-=(Fptt);//trans1
+				}
+
+				
+
+
+/*
+			//brian trying to see if can get soil water status playing a role in determing water uptake capacity.
+			cropAvailableWater=water[1][l]-wiltptw;
+			if(cropAvailableWater<0)
+				cropAvailableWater=0.0;
+			soilWaterStress=cropAvailableWater/totalAvailableWater;
+				LayerTrans=LayerTrans*pow(soilWaterStress,1.0);
+			//end brian
+*/
+
+
+				water[1][l] -= LayerTrans;
+				if(water[1][l]<=fldcapw && nWTL==l)
+				{
+					nWTL+=1;
+					WTL+=1;
+					day_WT=-WTL*h[1];
+				}
+				
+				
+				if(water[1][l]<0.0)
+				{
+					LayerTrans += water[1][l];
+					water[1][l] = 0.0;
+				}
+			}
+
+			DayPT1 += LayerTrans;
+			LayerTrans = 0.0;
+			}//end else if(WTL<l)
+			
+		}//end of layer loop
+
+
+
+
+
+
+
+//end phase2
+	}//end of PPTw>0.0 loop
+
+	
+	///////////crop get water from deep water pool --- PPTw1 water still required from PPTw (water demand - soil water uptaken DayPT1)
+	float PPTw1 = (PPTw - DayPT1);
+	if(PPTw1<0) PPTw1=0.0;
+
+	DayPT2 = 0.0;//daily water taken by crops from deep water pool - DayPT2- deep water pool transpiration
+
+	
+	if(PPTw1>0.)//&&root_layer==q 0&&WaterPool>0.00001
+	{
+		float add_water2=0.0;
+
+
+
+		//Brian Code
+
+		/*
+		float cropRootWPFactor;
+
+		if(crop[ccwc]==1||crop[ccwc]==43)
+		{
+			cropRootWPFactor=0.55;
+		}
+		else if(crop[ccwc]==10)
+		{cropRootWPFactor=0.75;
+		}
+		else
+		{cropRootWPFactor=0.25;
+		}
+
+			if(WaterPool>WaterPoolMax*cropRootWPFactor)
+			{
+
+					if(PPTw1<=(WaterPool-WaterPoolMax*cropRootWPFactor))
+					{
+						add_water2 = PPTw1;
+						WaterPool-=add_water2;
+
+						//DayPTdef = 0.0;
+					}
+					else
+					{
+						
+						add_water2 = (WaterPool-WaterPoolMax*cropRootWPFactor);
+						WaterPool=WaterPoolMax*cropRootWPFactor;
+						//DayPTdef -= add_water2;
+					}
+
+			}
+		*/	
+
+//li code
+		
+		if(PPTw1<=WaterPool)
+		{
+			add_water2 = PPTw1;
+			WaterPool-=add_water2;
+
+			//DayPTdef = 0.0;
+		}
+		else
+		{
+			
+			add_water2 = WaterPool;
+			WaterPool=0.0;
+			//WaterPool-=add_water2;
+			//DayPTdef -= add_water2;
+		}
+
+		//End li code
+		//WaterPool -= add_water2;
+		DayPT2 = add_water2;//m water
+		add_water2 = 0.0;		
+	}
+
+	//////crop get water from irrigation water/////////////////////////////////////////// PPTw2 (irrigation water demand after remaining deamnd from after soil trans (PPTw1)   and deep water pool trans (DayPT2)  )
+	float PPTw2 = PPTw1 - DayPT2;
+	DayPT3 = 0.0;//actual daily water taken by crops from irrigation water (DayPT3)
+
+	if(PPTw2>0.0&&irri_index>0.0)//index-irrigation
+	{
+			DayPT3 = PPTw2 * irri_index;
+
+			if(irri_close==0&&RainfedRice_flag==0) 
+			{
+				if(IrriMethod==0)//furrow irrigation
+				{
+					IrriWater = (5.0 * DayPT3); // irrigates 5 times the amount of water necessary to meet the transpiration demand of irrigation water
+				//	TTT += 0.1 * IrriWater / 0.005;
+				//	WaterPool+=IrriWater;
+				}
+				else if(IrriMethod==1)//sprinkler
+				{
+					IrriWater = (4.0 * DayPT3);
+				//	TTT += 0.05 * IrriWater / 0.005;
+				}
+				else if(IrriMethod==2)//surface dripping
+				{
+					IrriWater = (3.0 * DayPT3);
+				//	TTT += 0.05 * IrriWater / 0.005;
+				}
+				else if(IrriMethod==3)//deep dripping
+				{
+					IrriWater = (2.0 * DayPT3);
+				}
+				else if(IrriMethod==4)//film mulch
+				{
+					IrriWater = (1.0 * DayPT3);
+				}
+
+				yr_irri += IrriWater+DayPT3;
+				day_irri += IrriWater+DayPT3;
+				
+				
+
+				
+				//DayPT3=0.0;
+			}
+			if(PPTw2>0.0 && IrriWater>0.0)
+			{
+				/*
+				if(IrriWater>DayPT3)
+				{
+					float AxcessH2O = IrriWater - DayPT3;
+					if(IrriMethod==0||IrriMethod==1||IrriMethod==2)
+						water[1][1] += AxcessH2O;
+					else
+						water[1][8] += AxcessH2O;				
+				}
+				*/
+			}
+	}
+			
+	if(irri_index==0.0&&IrriWater>0.0)//event irrigation
+	{
+		float Accessibility[5] = {0.15, 0.5, 0.75, 1.0, 1.0};
+		float AccessibleH2O = Accessibility[IrriMethod] * IrriWater;
+
+		if(AccessibleH2O>=PPTw2) 
+			DayPT3 = PPTw2;
+		else
+			DayPT3 = AccessibleH2O;
+
+		DayPT3=0.0;
+		
+		//IrriWater-=DayPT3;
+
+		/*	
+		if(IrriWater>DayPT3)
+		{
+			float AxcessH2O = IrriWater - DayPT3;
+			if(IrriMethod==0||IrriMethod==1||IrriMethod==2)
+				water[1][1] += AxcessH2O;
+				//surf_water += AxcessH2O-DayPT3;
+				
+		    else
+				
+				water[1][8] += AxcessH2O;
+			//	surf_water += AxcessH2O-DayPT3;
+		}
+		*/
+	}
+
+	float TotalDayPT = DayPT1 + DayPT2 + DayPT3;
+			
+	if(PPTw>TotalDayPT) 
+	{
+		DayCropWaterDeficit = PPTw - TotalDayPT;// m water
+		PPTw = 0.0;	
+	}
+
+
+	return(TotalDayPT);
+}

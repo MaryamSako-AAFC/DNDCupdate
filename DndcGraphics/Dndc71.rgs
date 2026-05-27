@@ -1,0 +1,11 @@
+HKCR
+{
+	NoRemove AppID
+	{
+		{AE61C1B5-1FCD-405A-A2C7-D8BBBFB83345} = s 'Dndc71'
+		'Dndc71.EXE'
+		{
+			val AppID = s {AE61C1B5-1FCD-405A-A2C7-D8BBBFB83345}
+		}
+	}
+}

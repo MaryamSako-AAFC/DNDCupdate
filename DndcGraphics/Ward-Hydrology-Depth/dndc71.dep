@@ -1,0 +1,715 @@
+# Microsoft Developer Studio Generated Dependency File, included by dndc71.mak
+
+.\Asia.cpp : \
+	".\Asia.h"\
+	".\dndc71.h"\
+	".\hinaProvince.h"\
+	".\IndiaState.h"\
+	".\StdAfx.h"\
+	
+
+.\data_set.cpp : \
+	".\data_set.h"\
+	".\StdAfx.h"\
+	
+
+.\dndc71.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\graphexView.h"\
+	".\MainFrm.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+!IF  "$(CFG)" == "dndc71 - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dndc71 - Win32 Debug"
+
+!ENDIF 
+
+.\dndc71.rc : \
+	".\RES\BITMAP1.BMP"\
+	".\res\dndc71.ico"\
+	".\res\dndc71.rc2"\
+	".\res\graphexDoc.ico"\
+	".\res\Toolbar.bmp"\
+	".\RES\toolbar1.bmp"\
+	".\resource.hm"\
+	
+
+.\dndc_climate.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\dndc_desktop.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\graphexView.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\dndc_map.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\Region.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\dndc_region.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\Region.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\dndc_site.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\Region.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\dndc_tool.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\dndc_uncertainty.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\graphexView.h"\
+	".\Region.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\dndc_wizard.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\graphexView.h"\
+	".\StdAfx.h"\
+	
+
+.\Europe.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\Europe.h"\
+	".\graphexDoc.h"\
+	".\StdAfx.h"\
+	
+
+.\ExtractData.cpp : \
+	".\dndc71.h"\
+	".\ExtractData.h"\
+	".\StdAfx.h"\
+	
+
+.\GasFlux.cpp : \
+	".\dndc71.h"\
+	".\dndc_tool.h"\
+	".\GasFlux.h"\
+	".\graphexDoc.h"\
+	".\graphexView.h"\
+	".\StdAfx.h"\
+	
+
+.\graph_maker.cpp : \
+	".\data_set.h"\
+	".\dprintf.h"\
+	".\gd.h"\
+	".\gd_io.h"\
+	".\gdfontg.h"\
+	".\gdfontl.h"\
+	".\gdfontmb.h"\
+	".\gdfonts.h"\
+	".\gdfontt.h"\
+	".\gdfx.h"\
+	".\graph_maker.h"\
+	".\parse_data.h"\
+	".\StdAfx.h"\
+	
+
+.\graphexDoc.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\MainFrm.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\graphexView.cpp : \
+	".\data_set.h"\
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\ExtractData.h"\
+	".\GasFlux.h"\
+	".\gd.h"\
+	".\gd_io.h"\
+	".\gdfontg.h"\
+	".\gdfontl.h"\
+	".\gdfontmb.h"\
+	".\gdfonts.h"\
+	".\gdfontt.h"\
+	".\gdfx.h"\
+	".\graph_maker.h"\
+	".\graphexDoc.h"\
+	".\graphexView.h"\
+	".\MainFrm.h"\
+	".\MonteCarlo.h"\
+	".\NewCrop.h"\
+	".\ountySave.h"\
+	".\Region.h"\
+	".\region_ES.h"\
+	".\RegionMap.h"\
+	".\SelectCrop.h"\
+	".\SitePage1.h"\
+	".\SitePage10.h"\
+	".\SitePage11.h"\
+	".\SitePage12.h"\
+	".\SitePage2.h"\
+	".\SitePage3.h"\
+	".\SitePage4.h"\
+	".\SitePage5.h"\
+	".\SitePage6.h"\
+	".\SitePage7.h"\
+	".\SitePage8.h"\
+	".\SitePage9.h"\
+	".\SitePara.h"\
+	".\SitePSheet.h"\
+	".\StdAfx.h"\
+	".\UncertaintyInput.h"\
+	".\USAstate.h"\
+	".\WizardCrops.h"\
+	".\WizardUncertainty.h"\
+	
+
+.\hinaProvince.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\hinaProvince.h"\
+	".\Region.h"\
+	".\StdAfx.h"\
+	
+
+.\IndiaState.cpp : \
+	".\dndc71.h"\
+	".\IndiaState.h"\
+	".\StdAfx.h"\
+	
+
+.\MainFrm.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\MainFrm.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\MonteCarlo.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\graphexView.h"\
+	".\MonteCarlo.h"\
+	".\StdAfx.h"\
+	
+
+.\NewCrop.cpp : \
+	".\dndc71.h"\
+	".\NewCrop.h"\
+	".\StdAfx.h"\
+	
+
+.\NewZealand.cpp : \
+	".\dndc71.h"\
+	".\NewZealand.h"\
+	".\StdAfx.h"\
+	
+
+.\NorthAmerica.cpp : \
+	".\dndc71.h"\
+	".\NorthAmerica.h"\
+	".\StdAfx.h"\
+	".\USAstate.h"\
+	
+
+.\Oceania.cpp : \
+	".\dndc71.h"\
+	".\NewZealand.h"\
+	".\Oceania.h"\
+	".\StdAfx.h"\
+	
+
+.\ountyCrops.cpp : \
+	".\dndc71.h"\
+	".\ountyCrops.h"\
+	".\StdAfx.h"\
+	
+
+.\ountySave.cpp : \
+	".\dndc71.h"\
+	".\ountySave.h"\
+	".\StdAfx.h"\
+	
+
+.\parse_data.cpp : \
+	".\data_set.h"\
+	".\dprintf.h"\
+	".\parse_data.h"\
+	".\StdAfx.h"\
+	
+
+.\Region.cpp : \
+	".\Asia.h"\
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\Europe.h"\
+	".\graphexDoc.h"\
+	".\graphexView.h"\
+	".\hinaProvince.h"\
+	".\NorthAmerica.h"\
+	".\Oceania.h"\
+	".\Region.h"\
+	".\RegionSelectCrops.h"\
+	".\RegionYear.h"\
+	".\StdAfx.h"\
+	".\USAstate.h"\
+	
+
+.\region_clim.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\Region.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\region_ES.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\region_ES.h"\
+	".\StdAfx.h"\
+	
+
+.\region_farm.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\Region.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\region_Shangrila.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\Region.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\region_site.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\Region.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\region_soil.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\Region.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\RegionMap.cpp : \
+	".\dndc71.h"\
+	".\RegionMap.h"\
+	".\StdAfx.h"\
+	
+
+.\RegionSelectCrops.cpp : \
+	".\dndc71.h"\
+	".\RegionSelectCrops.h"\
+	".\StdAfx.h"\
+	
+
+.\RegionYear.cpp : \
+	".\dndc71.h"\
+	".\RegionYear.h"\
+	".\StdAfx.h"\
+	
+
+.\SelectCrop.cpp : \
+	".\dndc71.h"\
+	".\SelectCrop.h"\
+	".\StdAfx.h"\
+	
+
+.\SelectObsWT.cpp : \
+	".\dndc71.h"\
+	".\SelectObsWT.h"\
+	".\SitePage9.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePage1.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\SitePage1.h"\
+	".\SitePage3.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePage10.cpp : \
+	".\dndc71.h"\
+	".\SitePage1.h"\
+	".\SitePage10.h"\
+	".\SitePage11.h"\
+	".\SitePage12.h"\
+	".\SitePage2.h"\
+	".\SitePage3.h"\
+	".\SitePage4.h"\
+	".\SitePage5.h"\
+	".\SitePage6.h"\
+	".\SitePage7.h"\
+	".\SitePage8.h"\
+	".\SitePage9.h"\
+	".\SitePara.h"\
+	".\SitePSheet.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePage11.cpp : \
+	".\dndc71.h"\
+	".\SitePage1.h"\
+	".\SitePage10.h"\
+	".\SitePage11.h"\
+	".\SitePage12.h"\
+	".\SitePage2.h"\
+	".\SitePage3.h"\
+	".\SitePage4.h"\
+	".\SitePage5.h"\
+	".\SitePage6.h"\
+	".\SitePage7.h"\
+	".\SitePage8.h"\
+	".\SitePage9.h"\
+	".\SitePara.h"\
+	".\SitePSheet.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePage12.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\SitePage1.h"\
+	".\SitePage10.h"\
+	".\SitePage11.h"\
+	".\SitePage12.h"\
+	".\SitePage2.h"\
+	".\SitePage3.h"\
+	".\SitePage4.h"\
+	".\SitePage5.h"\
+	".\SitePage6.h"\
+	".\SitePage7.h"\
+	".\SitePage8.h"\
+	".\SitePage9.h"\
+	".\SitePara.h"\
+	".\SitePSheet.h"\
+	".\StdAfx.h"\
+	
+.\SitePage2.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\SitePage2.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePage3.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\SitePage1.h"\
+	".\SitePage10.h"\
+	".\SitePage11.h"\
+	".\SitePage12.h"\
+	".\SitePage13.h"\
+	".\SitePage14.h"\
+	".\SitePage2.h"\
+	".\SitePage3.h"\
+	".\SitePage4.h"\
+	".\SitePage5.h"\
+	".\SitePage6.h"\
+	".\SitePage7.h"\
+	".\SitePage8.h"\
+	".\SitePage9.h"\
+	".\SitePara.h"\
+	".\SitePSheet.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePage4.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\SitePage1.h"\
+	".\SitePage10.h"\
+	".\SitePage11.h"\
+	".\SitePage12.h"\
+	".\SitePage13.h"\
+	".\SitePage14.h"\
+	".\SitePage2.h"\
+	".\SitePage3.h"\
+	".\SitePage4.h"\
+	".\SitePage5.h"\
+	".\SitePage6.h"\
+	".\SitePage7.h"\
+	".\SitePage8.h"\
+	".\SitePage9.h"\
+	".\SitePara.h"\
+	".\SitePSheet.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePage5.cpp : \
+	".\dndc71.h"\
+	".\SitePage1.h"\
+	".\SitePage10.h"\
+	".\SitePage11.h"\
+	".\SitePage12.h"\
+	".\SitePage13.h"\
+	".\SitePage14.h"\
+	".\SitePage2.h"\
+	".\SitePage3.h"\
+	".\SitePage4.h"\
+	".\SitePage5.h"\
+	".\SitePage6.h"\
+	".\SitePage7.h"\
+	".\SitePage8.h"\
+	".\SitePage9.h"\
+	".\SitePara.h"\
+	".\SitePSheet.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePage6.cpp : \
+	".\dndc71.h"\
+	".\SitePage1.h"\
+	".\SitePage10.h"\
+	".\SitePage11.h"\
+	".\SitePage12.h"\
+	".\SitePage13.h"\
+	".\SitePage14.h"\
+	".\SitePage2.h"\
+	".\SitePage3.h"\
+	".\SitePage4.h"\
+	".\SitePage5.h"\
+	".\SitePage6.h"\
+	".\SitePage7.h"\
+	".\SitePage8.h"\
+	".\SitePage9.h"\
+	".\SitePara.h"\
+	".\SitePSheet.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePage7.cpp : \
+	".\dndc71.h"\
+	".\SitePage1.h"\
+	".\SitePage10.h"\
+	".\SitePage11.h"\
+	".\SitePage12.h"\
+	".\SitePage13.h"\
+	".\SitePage14.h"\
+	".\SitePage2.h"\
+	".\SitePage3.h"\
+	".\SitePage4.h"\
+	".\SitePage5.h"\
+	".\SitePage6.h"\
+	".\SitePage7.h"\
+	".\SitePage8.h"\
+	".\SitePage9.h"\
+	".\SitePara.h"\
+	".\SitePSheet.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePage8.cpp : \
+	".\dndc71.h"\
+	".\SitePage1.h"\
+	".\SitePage10.h"\
+	".\SitePage11.h"\
+	".\SitePage12.h"\
+	".\SitePage13.h"\
+	".\SitePage14.h"\
+	".\SitePage2.h"\
+	".\SitePage3.h"\
+	".\SitePage4.h"\
+	".\SitePage5.h"\
+	".\SitePage6.h"\
+	".\SitePage7.h"\
+	".\SitePage8.h"\
+	".\SitePage9.h"\
+	".\SitePara.h"\
+	".\SitePSheet.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePage9.cpp : \
+	".\dndc71.h"\
+	".\SelectObsWT.h"\
+	".\SitePage1.h"\
+	".\SitePage10.h"\
+	".\SitePage11.h"\
+	".\SitePage12.h"\
+	".\SitePage13.h"\
+	".\SitePage14.h"\
+	".\SitePage2.h"\
+	".\SitePage3.h"\
+	".\SitePage4.h"\
+	".\SitePage5.h"\
+	".\SitePage6.h"\
+	".\SitePage7.h"\
+	".\SitePage8.h"\
+	".\SitePage9.h"\
+	".\SitePara.h"\
+	".\SitePSheet.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePara.cpp : \
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	
+
+.\SitePSheet.cpp : \
+	".\SitePage1.h"\
+	".\SitePage10.h"\
+	".\SitePage11.h"\
+	".\SitePage12.h"\
+	".\SitePage13.h"\
+	".\SitePage14.h"\
+	".\SitePage2.h"\
+	".\SitePage3.h"\
+	".\SitePage4.h"\
+	".\SitePage5.h"\
+	".\SitePage6.h"\
+	".\SitePage7.h"\
+	".\SitePage8.h"\
+	".\SitePage9.h"\
+	".\SitePara.h"\
+	".\SitePSheet.h"\
+	".\StdAfx.h"\
+	
+
+.\StdAfx.cpp : \
+	".\StdAfx.h"\
+	
+
+.\UncertaintyInput.cpp : \
+	".\dndc71.h"\
+	".\StdAfx.h"\
+	".\UncertaintyInput.h"\
+	
+
+.\USAstate.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\StdAfx.h"\
+	".\USAstate.h"\
+	
+
+.\WizardCrops.cpp : \
+	".\dndc71.h"\
+	".\dndc_main.h"\
+	".\dndc_tool.h"\
+	".\graphexDoc.h"\
+	".\SitePara.h"\
+	".\StdAfx.h"\
+	".\WizardCrops.h"\
+	
+
+.\WizardUncertainty.cpp : \
+	".\dndc71.h"\
+	".\StdAfx.h"\
+	".\WizardUncertainty.h"\
+	
+
+!IF  "$(CFG)" == "dndc71 - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dndc71 - Win32 Debug"
+
+!ENDIF 
+
+!IF  "$(CFG)" == "dndc71 - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "dndc71 - Win32 Debug"
+
+!ENDIF 
+

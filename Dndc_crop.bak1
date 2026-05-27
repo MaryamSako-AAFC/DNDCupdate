@@ -1,0 +1,2370 @@
+#include "stdafx.h"
+#include "Dndcgo.h"
+#include "Source_main.h"
+#include "Dndc_tool.h"
+	
+class_model DData;
+			
+int GermDays[80]={10,10,10,10,10,10,10,0,10,10,10,
+					   10,0,10,10,10,10,10,10,10,10,
+					   10,10,10,10,10,10,10,10,10,10,
+					   10,10,10,10,10,10,10,10,10,10,
+					   10,10,10,10,10,10,10,10,10,10,
+					   10,10,10,10,10,10,10,10,10,10,
+					   10,10,10,10,10,10,10,10,10,10,
+					   10,10,10,10,10,10,10,10,10};
+			 
+float WinterWheat_LimitiT = 6.0;
+int root_q;
+
+void class_model::crop_growth(int scale)
+{
+	int ccwc;
+
+	for(ccwc=1; ccwc<=CropNumbers; ccwc++)
+	{
+		//Crop parameters initiation
+		TotalCropBiomass = 0.0;	
+		dPlantBiomass=0.0;		
+		sum_shoot_CO2 = 0.0;
+		sum_stem_CO2 = 0.0;
+		cropht = 0.5;
+		WiltFlag[ccwc] = 0;
+		crop_T_demand[ccwc]=max_TDD[ccwc];
+		CropWaterDemand[ccwc] = wreq[ccwc] * maxmn[ccwc] * plantcn[ccwc] / 0.4 / 1000.0 / 10000.0;
+		if(ini_N_fix[ccwc]>0.0) max_N_fix[ccwc] = (1.0 - 1.0 / ini_N_fix[ccwc]) * maxmn[ccwc];
+		else max_N_fix[ccwc] = 0.0;
+		if(crop[ccwc]==1||crop[ccwc]==7||crop[ccwc]==65||crop[ccwc]==13||crop[ccwc]==27) C_type[ccwc] = 4;
+		else C_type[ccwc] = 3;
+  		ddupn[ccwc] = 0.0;
+		OptCropC[ccwc] = GrainYield[ccwc] / grain[ccwc];
+		OptGrainC[ccwc] = OptCropC[ccwc] * grain[ccwc];
+		OptLeafC[ccwc] = OptCropC[ccwc] * leaf[ccwc];
+		OptStemC[ccwc] = OptCropC[ccwc] * stem[ccwc];
+		OptRootC[ccwc] = OptCropC[ccwc] * root[ccwc];
+		lai[ccwc] = (Leaf_Wt[ccwc] + Stem_Wt[ccwc] + Grain_Wt[ccwc]) / 1500.0 * lai_index[ccwc];
+		
+
+		/*if(jday==1)
+		{
+			if(crop1_trans>0.0) 
+			{
+				CropWaterDemand[1] -= crop1_trans;
+				crop1_trans = 0.0;
+			}
+
+			if(crop2_trans>0.0) 
+			{
+				CropWaterDemand[2] -= crop2_trans;
+				crop2_trans = 0.0;
+			}
+		}*/
+
+		//initiate crop growth
+		if(crop_flag[ccwc]==0)//if(seed[ccwc]==0) 
+		{			
+			ini_crop(scale, ccwc);			
+		}
+		
+		if(crop_flag[ccwc]==1)
+		{
+			seed[ccwc]++;
+			crop_days[ccwc]++;
+
+			if(seed[ccwc]==1) maturity_flag[ccwc] = 0;
+									
+			if(maturity_flag[ccwc]==0)
+			{
+				growth_stage(ccwc);//define PGI[cwcc], dat_TDD[cwcc], TDD[cwcc]
+
+				crop_N_demand(ccwc);//define day_N_demand[ccwc] (daily crop N demand, kg N/ha)
+
+				if(day_N_demand[ccwc]>0.0)
+				{
+					water_demand(DayPET, ccwc);//define PPT[ccwc] (daily potential plant transpiration, m)				
+								
+					crop_PT[ccwc] += PPT[ccwc];
+					day_SumPT += PPT[ccwc];				
+					DayPT0 += PPT[ccwc]; 
+
+					if(crop[ccwc]==46) irri_close = 1;
+					else irri_close = 0;
+
+					if(PPT[ccwc]>0.0)
+					{
+						APT[ccwc] = crop_transpiration(irri_close, PPT[ccwc], ccwc);
+
+						if(APT[ccwc]>PPT[ccwc]) APT[ccwc] = PPT[ccwc]; 
+				
+						day_DWater[ccwc] = APT[ccwc] / PPT[ccwc];//actual plant transpiration / potential plant transpiration
+						crop_water_stress[ccwc] += day_DWater[ccwc];
+						crop_water_stress_days[ccwc]++;
+					}
+					else
+					{
+						APT[ccwc] = 0.0;
+						day_DWater[ccwc] = 1.0;
+					}
+
+					//Total_PT += APT[ccwc];
+
+					day_N_demand2[ccwc] = day_N_demand[ccwc] * day_DWater[ccwc];//daily N demand adjusted by water stress  (day_Dwater[ccwc])
+					
+					if (day_N_demand2[ccwc] > 0.0) 
+						n_uptake_by_crop(ccwc);//define day_nup[ccwc] (actual daily N uptake from soil, kg N/ha) and N_stress[ccwc]
+					else
+						day_nup[ccwc] = 0.0;
+
+					//Adjust APT[ccwc] based on actual N taken //Returns the excess water that is removed from initial crop transpiration back to top 10 layers (fraction).
+					if(day_nup[ccwc]>0.0&&(day_nup[ccwc]/day_N_demand2[ccwc])<1.0)
+					{
+						float Fdj = day_nup[ccwc] / day_N_demand2[ccwc];
+								
+						float ReturnW = APT[ccwc] * (1.0 - Fdj); 
+						APT[ccwc] -= ReturnW;
+						for(int i=1; i<=10; i++)
+						{
+							water[1][i] += (0.1 * ReturnW);
+						}						
+					}
+
+					crop_AT[ccwc] += APT[ccwc]; //actual accumulative plant water uptake, m
+					act_DayAT += APT[ccwc];//sum up daily actual water uptake by crops, m
+
+					// NH3 uptake by and release from canopy 
+					nh3_uptake_release(lai, &day_soil_nh3, PlantTakeN, maxmn, leaf_water, cropht, base_nh3,
+											day_N_demand2, day_nup, day_fixN, day_DWater, day_plant_nh3, &yr_NH3_deposit, ccwc);
+
+					total_crop_N(ccwc);//define Day_GrowthN[ccwc] (actual daily plant-gained N and plantn[ccwc] (actual plant accumulative N, kg N/ha)
+							
+					biomass_N_partition(ccwc);
+				}
+
+				//define crop damage by weather events
+				if(wind_damage_flag>0.0) weather_damage(0, 0.17, ccwc);
+				if(hail_event>0.0) weather_damage(1, hail_event, ccwc);
+				if(horricane_event>0.0) weather_damage(2, horricane_event, ccwc);
+
+				root_develop(ccwc);//define root depth, m (no use at this moment)
+
+				crop_N_stress[ccwc] += N_stress[ccwc];
+				crop_N_stress_days[ccwc]++; 
+
+				if(Root_Wt[ccwc]>0.0)
+					root_respir(ccwc);//define root_doc[ccwc]
+
+				//define plant respiration
+				TotalCropBiomass = (Grain_Wt[ccwc]+Leaf_Wt[ccwc]+Stem_Wt[ccwc]+Root_Wt[ccwc]);				
+				float ShootpBiomass = Leaf_Wt[ccwc] + Grain_Wt[ccwc];
+				if(TotalCropBiomass>0.0&&crop_flag[ccwc]==1&&air_temp>0.0)
+				{
+					if(crop[ccwc]==11||crop[ccwc]==12)
+					{
+						day_shoot_CO2[ccwc] = 5.0 * (dayG_grain[ccwc]+dayG_leaf[ccwc]) * (1.0 - PGI[ccwc]) + 0.001 * (Leaf_Wt[ccwc] + Grain_Wt[ccwc]);//0.9
+						day_stem_CO2[ccwc] = 5.0 * dayG_stem[ccwc] * (1.0 - PGI[ccwc]) + 0.001 * Stem_Wt[ccwc];//0.9
+						day_rco2[ccwc] = 5.0 * dayG_root[ccwc] * (1.0 - PGI[ccwc]) + 0.001 * Root_Wt[ccwc];//0.9
+					}
+					else
+					{
+						float FAT = air_temp / 50.0;
+						day_shoot_CO2[ccwc] = 0.03 * ShootpBiomass * (1.0 - PGI[ccwc]) * FAT;//0.015 * ShootpBioma						
+						if(LandUse==6) day_stem_CO2[ccwc] = 0.001 * Stem_Wt[ccwc] * (1.0 - PGI[ccwc]) * FAT;
+						else day_stem_CO2[ccwc] = 0.03 * Stem_Wt[ccwc] * (1.0 - PGI[ccwc]) * FAT;
+						day_rco2[ccwc] = 0.9 * dayG_root[ccwc] * (1.0 - PGI[ccwc]) + 0.001 * Root_Wt[ccwc];
+					}			
+				}
+				else
+				{
+					day_shoot_CO2[ccwc] = 0.0;
+					day_stem_CO2[ccwc] = 0.0;
+				}
+
+				sum_shoot_CO2 += day_shoot_CO2[ccwc];
+				sum_stem_CO2 += day_stem_CO2[ccwc];
+				day_root_resp += day_rco2[ccwc];
+
+				dPlantBiomass += Day_C_growth[ccwc];
+				
+				if(Day_C_growth[ccwc]<=0.0)
+				{
+					Root_Wt[ccwc] -= 0.05*day_rco2[ccwc];
+				}
+			}//end of if(maturity_flag[ccwc]==0)
+
+			//Crop maturity/harvest
+			if(PerennialFlag[ccwc]==1)
+			{
+				if(PGI[ccwc]>=1.0||TDD[ccwc]>=max_TDD[ccwc])//||plantn[ccwc]>=maxmn[ccwc])//seed[ccwc]>=364||
+				{					
+					maturity_flag[ccwc]=1;
+
+					//seed[ccwc] = 1;
+					crop_days[ccwc] = 1;
+					PGI[ccwc] = 0.0;
+					TDD[ccwc] = 0.0;					
+				}	
+
+				if(seed[ccwc]==364)
+				{
+					maturity_flag[ccwc]=1;
+					//crop_flag[ccwc] = 0;
+					seed[ccwc] = 0;
+					//crop_days[ccwc] = 0;
+					PGI[ccwc] = 0.0;
+					TDD[ccwc] = 0.0;
+				}
+
+				
+				//if(maturity_flag[ccwc]==1)
+				{
+					TotalCropBiomass = (Grain_Wt[ccwc]+Leaf_Wt[ccwc]+Stem_Wt[ccwc]+Root_Wt[ccwc]);
+					if(TotalCropBiomass>0.0) crop_senescence(ccwc);
+				}
+			}
+			else
+			{
+				if(plantn[ccwc]>=maxmn[ccwc]||PGI[ccwc]>=1.0||TDD[ccwc]>=max_TDD[ccwc])
+				{
+					maturity_flag[ccwc]=1;
+					if(IrriRice_flag==1) rice_maturity_flag=1;					
+				}
+
+				if((seed[ccwc]-1)==grow_days[ccwc])
+						crop_harvesting(scale, ccwc);
+			}	
+		}
+	}//end of crop loop
+		
+	act_DayPE = DayPET - act_DayAT;//daily potential soil evaporation, m
+	if(act_DayPE<0.0) act_DayPE = 0.0;
+					
+}
+
+void class_model::crop_N_demand(int ccwc)
+{
+    float GrassBiomassProductivity, GrassCProductivity;
+	float T_stress=1.0;
+
+	//temperature stress, using Beta distribution curve, Yan and Hunt 1999 (Annals of Botany 84:607-614).				
+	float TTmax = 40.0, TTopt = OptimumT[ccwc];
+	if(crop[ccwc]==1)
+	{TTmax=45.0;}
+	if(PGI[ccwc]>0.5) 
+		//T_stress = (TTmax-air_temp)/(TTmax-TTopt)*powf((air_temp/TTopt), TTopt/(TTmax-TTopt));//original implementaion-using average air-temp
+		T_stress = (TTmax-max_temp)/(TTmax-TTopt)*powf((max_temp/TTopt), TTopt/(TTmax-TTopt));//now using Max_temp as the stress indicator
+	else
+	{
+		if(air_temp<OptimumT[ccwc]*0.2) T_stress = 0.2;
+		else T_stress = 1.0;
+	}
+
+/*	if(crop[ccwc]==1)//corn
+	{
+		float J_flag1=1.0, J_flag2=1.0, J_flag3=1.0, J_flag4=1.0;
+
+		if(jday>=210&&jday<=225&&wind_speed>=10.0) 
+		{
+			J_flag1 = 0.9;
+			jarovization_flag = min(J_flag1, jarovization_flag);
+			wind_damage_flag = 2.0;
+		}
+
+		if(wind_damage_flag>0.0)
+		{
+			//day_N_demand[ccwc] = 0.0;
+			wind_damage_flag -= 1.0;//0.5;
+			if(wind_damage_flag<0.0) wind_damage_flag = 0.0;
+		}
+
+	}
+*/
+/*	if(crop[ccwc]==2)//winter wheat
+	{	
+		float J_flag1=1.0, J_flag2=1.0, J_flag3=1.0, J_flag4=1.0;
+
+		//jarovization
+		if(jday<100&&air_temp>=5.0&&TDD[ccwc]<=140.0) 
+		{
+			J_flag1 = 0.3;
+			jarovization_flag = min(J_flag1, jarovization_flag);
+		}
+
+		//growing too fast in last winter
+		if(jday==1&&(Leaf_Wt[ccwc]+Leaf_Wt[ccwc])>2160.0) 
+		{
+			J_flag2 = 0.2;
+			jarovization_flag = min(J_flag2, jarovization_flag);
+		}
+		
+		//Fen-Nie T
+		//(TDD[ccwc]>300.0&&TDD[ccwc]<380.0&&air_temp>18.0) jarovization_flag = 0.3;
+	
+		//if(TDD[ccwc]>1400.0&&TDD[ccwc]<1500.0&&max_temp>30.0) 
+		{
+		//	J_flag3 = 0.1;
+		//	jarovization_flag = min(J_flag3, jarovization_flag);
+		}
+
+		if(jday>140&&jday<165&&max_temp>=30.0) 
+		{
+			OverHotDays++;
+			if(OverHotDays>=3) 
+			{
+				J_flag1 = 0.1;
+				jarovization_flag = min(J_flag1, jarovization_flag);
+				OverHotDays = 0;
+			}
+		}
+	}
+*/
+	T_stress = min(1.0, max(0.0, T_stress));
+
+	if(crop[ccwc]>0)
+	{
+		day_N_demand[ccwc] = 0.0;
+	
+		float FloodEffect, WTEffect=1.0, WSEffect=1.0;
+
+			if(wetland_flag==1||(retard==1&&st[1]>12))
+			{
+				FloodEffect = 1.0;
+				WTEffect = 1.0;
+				WiltFlag[ccwc]=0;
+			}
+			else 
+			{
+				FloodEffect = 1.0 / (FloDays+1.0);
+				if(day_WT>-0.3) WTEffect = -day_WT;
+
+				WSEffect = powf(day_DWater[ccwc], 0.25);//0.5
+
+				if(PGI[ccwc]>0.4&&PGI[ccwc]<0.7)
+				{					
+					if(WSEffect<=0.01) Dwilt[ccwc]+=1.0;
+					else Dwilt[ccwc]=0.0;
+
+					if(Dwilt[ccwc]>=12.0)//17.0
+						WiltFlag[ccwc]++;
+				}
+				else 
+					WiltFlag[ccwc]=0;								
+			}			
+
+			/*if(PerennialFlag[ccwc]==1)
+			{
+				if(plantn[ccwc]>=maxmn[ccwc]||PGI[ccwc]==1||seed[ccwc]>=363)
+				{
+					maturity_flag[ccwc]=1;
+				}
+			}
+			else
+			{
+				if(plantn[ccwc]>=maxmn[ccwc])//&&PerennialFlag[ccwc]==0) 
+				{
+					maturity_flag[ccwc]=1;
+
+					if(IrriRice_flag==1) rice_maturity_flag=1;//crop[ccwc]==20
+				}
+			}*/
+
+
+			
+			if(seed[ccwc]>GermDays[crop[ccwc]])//maturity_flag[ccwc]==0&&
+			{
+				//if((CropSumN[ccwc]<(maxmn[ccwc] / (1.0 + (float)WiltFlag[ccwc])) && TDD[ccwc]<max_TDD[ccwc])||
+				if((plantn[ccwc]<(maxmn[ccwc] / (1.0 + (float)WiltFlag[ccwc])) && TDD[ccwc]<max_TDD[ccwc])||
+					(PerennialFlag[ccwc]==1&&(yr_plantn[ccwc]<(maxmn[ccwc] / (1.0 + (float)WiltFlag[ccwc])) && TDD[ccwc]<max_TDD[ccwc])))//Currently determines whether plantN exceed maxmn (maximum N uptake).
+				{
+					float fPGI=0.0, dfPGI=0.0, ffPGI=0.0, GWa, GWb, GWc;
+
+			 		if(C_type[ccwc]==3)//C3 crops 
+					{
+						GWa = 5.0;//5.0
+						GWb = 5.0;//5.0
+						GWc = 0.5;
+					}
+					else //C4 type crops
+					{
+						GWa = 6.0;//6.0;
+						GWb = 5.0;//6.0;
+						GWc = 0.5;
+					}
+
+						
+
+					//need to do this only on first day of growth
+							
+					
+
+					if((crop_days[ccwc]-GermDays[crop[ccwc]])==1)
+					{
+						
+						 float blah;
+					 if(year==19)
+					 {
+						 blah=1.0;
+					 }
+
+
+
+
+						FILE  *fpa;//Create new file handler
+						char   CLIM1[80],junk8[80];//store path name in char
+						float gddT[731], junk1,junk2,junk3,junk4,junk5,junk6,junk7;
+						float scaleF[731];
+						//create temp variables to hold climate variables
+						int dayClim[731];
+						sprintf(CLIM1, "%s\\INPUTS\\%s", OUTPUT, climd[0]);
+						fpa = fopen(CLIM1, "r");
+						if ( fpa == NULL ) note(0, CLIM1);
+						for(int z=1; z<366; z++)
+						{
+							fscanf(fpa, "%d %f %f %f %f %f %f %f %f",&dayClim[z],&gddT[z],&junk1,&junk2,&junk3,&junk4,&junk5,&junk6,&junk7);
+						//	fscanf(fpa, "%d %f %s",&dayClim[z],&gddT[z],&junk8[1]);
+							if(gddT[z]<0)
+							{gddT[z]=0.0;
+							}
+						}
+						fclose( fpa );
+
+						//	FILE  *fpa;//Create new file handler
+						
+						FILE *fcl;//create File Handler
+						char CLIM0[80],climFile[80];//create two strings one for file name and one for the 2nd year of climate data to be read in.
+						sprintf(CLIM0, "%s\\INPUTS\\clim-%d",OUTPUT,year+1);//OUTPUT is the string for the path for DNDC. year+1 grabs the next year for the crop
+
+						if((fcl = fopen(CLIM0, "r"))!=NULL)//test to see if overwintering crop if(HarvestYear[ccwc]==2)
+						{
+								
+								fcl = fopen(CLIM0, "r");
+									//if ( fcl == NULL ) note(0, CLIM0);
+							
+								fscanf(fcl, "%s",&climFile);
+								fclose(fcl);
+								
+
+
+
+
+								
+								sprintf(CLIM1, "%s\\INPUTS\\%s", OUTPUT, climFile);
+								fpa = fopen(CLIM1, "r");
+								if ( fpa == NULL ) note(0, CLIM1);
+								for(int y=1; y<366; y++)
+								{
+									fscanf(fpa, "%d %f %f %f %f %f %f %f %f",&dayClim[y+365],&gddT[y+365],&junk1,&junk2,&junk3,&junk4,&junk5,&junk6,&junk7);
+								//	fscanf(fpa, "%d %f %s",&dayClim[z],&gddT[z],&junk8[1]);
+									if(gddT[y+365]<0)
+									{gddT[y+365]=0.0;
+									}
+								}
+								fclose( fpa );
+						}
+					
+						
+							float sumGDD,tPGI,tffPGI;
+							int cropGDD;
+							cropGDD=jday;
+							sumGDD=0.0;
+							
+							tPGI=0.0;
+							while(sumGDD<=max_TDD[ccwc])
+							{
+								if(gddT[cropGDD]<0)
+									gddT[cropGDD]=0.0;
+								sumGDD+=gddT[cropGDD];
+								tPGI+=gddT[cropGDD]/max_TDD[ccwc];
+									
+								
+
+								//crop curves
+								if(crop[ccwc]==8||crop[ccwc]==6||crop[ccwc]==9||crop[ccwc]==25||crop[ccwc]==2)//wheat,barley,rye
+								{
+									if(tPGI<=0.32) //vegetative stage
+									tffPGI =(0.000000000000003953*pow((tPGI*1600),6) - 0.000000000006329*pow((tPGI*1600),5) + 0.000000003623*pow((tPGI*1600),4) - 0.0000008819*pow((tPGI*1600),3) + 0.00009362*pow((tPGI*1600),2) - 0.003539*(tPGI*1600) +0.106086);
+									else//reproductive stage
+									tffPGI =(0.000001299*pow((tPGI*1600),2) - 0.0045671*(tPGI*1600)+3.9851175);//11963
+									if (tffPGI < 0.0) tffPGI = 0.0; 
+
+								}
+								else if(crop[ccwc]==1)
+								{	
+									if(tPGI<=0.28) //vegetative stage
+									tffPGI = (0.0049*exp(20.123*tPGI));
+									else//reproductive stage
+									tffPGI = (-0.1256*pow(tPGI,4)-11.249*pow(tPGI,3)+7.5513*pow(tPGI,2)+3.9352*tPGI-0.0499);//Brian change to test *4
+								}
+								else if(crop[ccwc]==3) //soybean and alfalfa
+								{ 
+							
+
+									if(tPGI<=0.5) //vegetative stage PGI<=0.5
+					
+									tffPGI = 2.6309*pow(tPGI,2)+0.1473*tPGI+0.002;
+									else//reproductive stage
+						 
+									tffPGI=(4.3156*pow(tPGI,4)-15.164*pow(tPGI,3)+15.392*pow(tPGI,2)-2.95*(tPGI));
+						
+								}
+								else if(crop[ccwc]==57) //canola
+								{ 
+									if(tPGI<=0.34) //vegetative stage PGI<=0.5
+									//tffPGI=0.00232;
+									tffPGI=0.00009*exp(17.193*tPGI);
+									else if(tPGI>0.34&&tPGI<=0.89) //vegetative stage PGI<=0.5
+									tffPGI = -0.0568*tPGI+0.0547;
+									else//reproductive stage
+									tffPGI = 0.0; 
+						
+								}
+								else
+								{
+									if(tPGI<=0.5) //vegetative stage
+									tffPGI = tPGI / (0.5 + tPGI) * (1.0 - tPGI) / (0.5 + tPGI) * GWa; 
+									else//reproductive stage
+									tffPGI = tPGI / (0.5 + tPGI) * (1.0 - tPGI) / (0.5 + tPGI) * GWb;
+									if (tffPGI < 0.0) tffPGI = 0.0; 
+							
+								}
+
+
+								totalFFPGI[ccwc]+=tffPGI;
+								cropGDD=cropGDD+1;
+
+
+
+							}	
+									
+					}	//calculating sum under the curve for growth curves.
+
+
+
+
+					/*
+					if(jday==1||seed[ccwc]==1) old_fPGI[ccwc] = TDD[ccwc];//0.0
+
+					fPGI = TDD[ccwc];
+					
+					dfPGI = (fPGI - old_fPGI[ccwc]) / max_TDD[ccwc];
+					//Brian
+					difPGI=dfPGI;
+					//endBrain
+					old_fPGI[ccwc] = TDD[ccwc];
+				*/
+					float dailyPGI;
+					dailyPGI=PGI[ccwc]-OLDPGI[ccwc];
+				//	multiplierN=dailyPGI/0.01;
+				
+					
+						
+
+					float baseNeedN,scaleN;
+					
+					if(crop[ccwc]==8||crop[ccwc]==6||crop[ccwc]==9||crop[ccwc]==25||crop[ccwc]==2)
+						{
+
+							
+							if(PGI[ccwc]<=0.32) //vegetative stage
+								ffPGI =(0.000000000000003953*pow((PGI[ccwc]*1600),6) - 0.000000000006329*pow((PGI[ccwc]*1600),5) + 0.000000003623*pow((PGI[ccwc]*1600),4) - 0.0000008819*pow((PGI[ccwc]*1600),3) + 0.00009362*pow((PGI[ccwc]*1600),2) - 0.003539*(PGI[ccwc]*1600) +0.106086);
+
+							else//reproductive stage
+								ffPGI =(0.000001299*pow((PGI[ccwc]*1600),2) - 0.0045671*(PGI[ccwc]*1600)+3.9851175);//11963
+							
+							  if (ffPGI < 0.0) ffPGI = 0.0; 
+							
+							
+							
+							day_need_N[ccwc]=ffPGI*maxmn[ccwc]/totalFFPGI[ccwc];
+							
+						}
+				 else if(crop[ccwc]==1)
+						{	
+
+					 float blah;
+					 if(year==19)
+					 {
+						 blah=1.0;
+					 }
+							//float multiplier1;
+							//multiplier1=maxmn[ccwc]/1.48807581;
+							
+								
+							if(PGI[ccwc]<=0.28) //vegetative stage
+							ffPGI = (0.0049*exp(20.123*PGI[ccwc]));
+							else//reproductive stage
+							ffPGI = (-0.1256*pow(PGI[ccwc],4)-11.249*pow(PGI[ccwc],3)+7.5513*pow(PGI[ccwc],2)+3.9352*PGI[ccwc]-0.0499);//Brian change to test *4
+							
+							
+							//scaleN=ffPGI*(PGI[ccwc]-OLDPGI[ccwc])*multiplier1;
+							
+							//scaleN=ffPGI*maxmn[ccwc]/baseNeedN*2250/max_TDD[ccwc];//*2400/max_TDD[ccwc];
+							day_need_N[ccwc]=ffPGI*maxmn[ccwc]/totalFFPGI[ccwc];
+							
+
+						}
+				 /*
+				 else if(crop[ccwc]==1)
+						{
+							if(PGI[ccwc]<=0.25) //vegetative stage
+							ffPGI = 2.6309*pow(PGI[ccwc],2)+0.1473*PGI[ccwc]+0.002;
+							else//reproductive stage
+							ffPGI = (-0.1256*pow(PGI[ccwc],4)-11.249*pow(PGI[ccwc],3)+7.5513*pow(PGI[ccwc],2)+3.9352*PGI[ccwc]-0.0499);//Brian change to test *4
+					
+
+						}
+				 else if(crop[ccwc]==29)
+						{
+							if(PGI[ccwc]<=0.40) //vegetative stage
+							ffPGI = 2.6309*pow(PGI[ccwc],2)+0.1473*PGI[ccwc]+0.002;
+							else//reproductive stage
+							ffPGI = 0.0387*PGI[ccwc]+1.1904;
+					
+
+						}
+				*/
+				 else if(crop[ccwc]==3) //soybean and alfalfa
+						{ 
+			
+
+						if(PGI[ccwc]<=0.5) //vegetative stage PGI<=0.5
+					
+						ffPGI = 2.6309*pow(PGI[ccwc],2)+0.1473*PGI[ccwc]+0.002;
+						else//reproductive stage
+						// ffPGI = (PGI[ccwc] / (0.5 + PGI[ccwc]) * (1.0 - PGI[ccwc]) / (0.5 + PGI[ccwc]) * GWb); 
+						ffPGI=(4.3156*pow(PGI[ccwc],4)-15.164*pow(PGI[ccwc],3)+15.392*pow(PGI[ccwc],2)-2.95*(PGI[ccwc]));
+						
+						day_need_N[ccwc]=ffPGI*maxmn[ccwc]/totalFFPGI[ccwc];
+						// changed *5 to *10
+						}
+				else if(crop[ccwc]==57) //canola
+						{ 
+
+						if(PGI[ccwc]<=0.34) //vegetative stage PGI<=0.5
+						//ffPGI=0.00232;
+						ffPGI=0.00009*exp(17.193*PGI[ccwc]);
+						else if(PGI[ccwc]>0.34&&PGI[ccwc]<=0.89) //vegetative stage PGI<=0.5
+						ffPGI = -0.0568*PGI[ccwc]+0.0547;
+						else//reproductive stage
+						 ffPGI = 0.0; 
+						
+					//	ffPGI=scaleN/maxmn[ccwc];
+						day_need_N[ccwc]=ffPGI*maxmn[ccwc]/totalFFPGI[ccwc];
+
+						// changed *5 to *10
+						}
+
+					else
+						{
+							
+
+							if(PGI[ccwc]<=0.5) //vegetative stage
+							ffPGI = PGI[ccwc] / (0.5 + PGI[ccwc]) * (1.0 - PGI[ccwc]) / (0.5 + PGI[ccwc]) * GWa; 
+							else//reproductive stage
+							ffPGI = PGI[ccwc] / (0.5 + PGI[ccwc]) * (1.0 - PGI[ccwc]) / (0.5 + PGI[ccwc]) * GWb;
+							if (ffPGI < 0.0) ffPGI = 0.0; 
+							
+						day_need_N[ccwc]=ffPGI*maxmn[ccwc]/totalFFPGI[ccwc];
+						}
+
+
+
+				
+
+
+
+
+					dfPGI = day_TDD[ccwc] / max_TDD[ccwc];
+
+
+					/*
+					if(PGI[ccwc]<=0.2&&crop[ccwc]!=20&&air_temp<10.0) //early vegetative stage
+					{
+						dfPGI *= 1.0;//0.2;
+					}
+					else if(PGI[ccwc]<=0.5)//vegetative stage
+					{
+						dfPGI *= 1.1;//1.2;
+					}
+					else //reproductive stage
+					{
+						//if(GrainN[ccwc]>=MaxGrainN[ccwc]) dfPGI = 0.0; 
+						//else dfPGI *= 1.5;
+						dfPGI *= 1.1;
+					}
+					*/
+					
+						
+				//	day_need_N[ccwc] = maxmn[ccwc] * dfPGI;//dfPGI;
+					
+				//	float tempN;
+			//	tempN=ffPGI*maxmn[ccwc]/147.24+0.17;
+				//day_need_N[ccwc]=tempN;
+
+
+					
+
+
+					float F_salinity = 1.0 / (1.0 + salinity * 0.02);
+									
+					
+					day_N_demand[ccwc] = (day_need_N[ccwc] * T_stress * F_salinity);//WSEffect * * ffPGI , jarovization_flag
+
+					if(crop[ccwc]==20&&flood_flag==0) day_N_demand[ccwc] *= 0.5;
+					
+					//TPNN += day_N_demand[ccwc];
+
+					//float wst = TPNN;
+				}			  
+				else  
+				{
+					day_N_demand[ccwc] = 0.0;
+					/*if(TDD[ccwc]>=max_TDD[ccwc]) 
+					{
+						maturity_flag[ccwc]++;
+						if(IrriRice_flag==1) rice_maturity_flag=1;//crop[ccwc]==20
+					}*/
+
+					//maturaty_flag[ccwc]++;
+				}
+			}
+			else
+				day_N_demand[ccwc] = 0.0;
+	}
+
+/*	if(C_type[ccwc]==3&&day_N_demand[ccwc]>0.0)
+	{
+		float CLAYf = 0.12 * (float)exp(9.008 * clay[1]); 
+	
+		if(crop[ccwc]==11||crop[ccwc]==12)
+		{
+			CLAYf = max(1.0, min(3.5, CLAYf));
+			day_N_demand[ccwc] *= powf((day_DWater[ccwc]+0.01), CLAYf);
+		}*/
+		/*else
+		{
+			CLAYf = max(0.5, min(3.5, CLAYf));
+			day_N_demand[ccwc] *= powf(day_DWater[ccwc], 0.1);//CLAYf);
+		}*/
+//	}
+	
+	if(ice[1]>0.0||snow_pack>0.0) day_N_demand[ccwc] = 0.0;
+
+	//day_N_demand[ccwc] *= CO2_factor;
+
+/*	if(crop[ccwc]==20)
+	{
+		//Heat stress for young shoots
+		if(PGI[ccwc]<0.4&&max_temp>25.0)
+		{
+			day_N_demand[ccwc] *= 0.5;
+		}
+
+		//Wind damage during flowering
+		if(wind_speed>5.0&&PGI[ccwc]>0.75) 
+		{
+			day_N_demand[ccwc] *= 0.0;
+		}
+
+		//Wind damage 
+		if(wind_speed>9.0)
+			wind_damage_flag = 0.0;//10.0
+
+		if(wind_damage_flag>0.0)
+		{
+			day_N_demand[ccwc] = 0.0;
+			wind_damage_flag -= 0.5;
+			if(wind_damage_flag<0.0) wind_damage_flag = 0.0;
+		}
+	}
+*/
+	if(crop[ccwc]==2&&air_temp<5.0) day_N_demand[ccwc] *= 0.2;
+
+	ideal_DayCropC[ccwc] = day_need_N[ccwc] * plantcn[ccwc];
+
+	
+ 
+}
+
+
+void class_model::n_uptake_by_crop(int ccwc)//for CropModel=0
+{
+    int i;
+    float    layer_demand, layer_up_no3, layer_up_nh4, layer_up_nh3, UPP;
+    float layer_up, day_Nuptake_from_clayN, day_SoilN_demand;
+
+	day_Nuptake_from_clayN=0.0;
+
+    if (seed[ccwc]==1) ddupn[ccwc] = 0.0;
+
+    demandn[ccwc] += day_N_demand2[ccwc];
+
+	if(max_N_fix[ccwc]>0.0) 
+	{
+		day_fixN[ccwc] = (day_N_demand2[ccwc] / maxmn[ccwc]) * max_N_fix[ccwc];
+		day_SoilN_demand = day_N_demand2[ccwc] - day_fixN[ccwc];
+		
+		day_soilN_from_Nfixation[ccwc] = 0.5 * day_fixN[ccwc];
+		float dfn = day_soilN_from_Nfixation[ccwc]/20.0;
+		for(int i=1;i<=20;i++) nh4[i] += dfn;
+	}
+	else
+	{
+		day_fixN[ccwc] = 0.0;
+		day_SoilN_demand = day_N_demand2[ccwc];
+	}
+
+	/////////////////////////////////////////////
+	if(day_SoilN_demand>0.0&&FertOption==333)//precision fertilization
+	{
+		float DADF = day_SoilN_demand * 1.1;
+		day_inFertN += DADF;
+		yr_addfer += DADF;
+		fert_flag = 1;
+		for (int i=1; i<=2; i++) nh4[i] += (DADF / 2.0);
+		
+	}
+	///////////////////////////////////////////////
+
+    day_nup[ccwc] = 0.0;
+
+	day_clay_N = 0.0;
+
+	for(int vv=1; vv<=q; vv++) 
+	{
+		day_clay_N += clay_nh4[vv]; 
+	}
+
+	int QqQ = q;
+
+	UPP = day_SoilN_demand;// / (float)QqQ;//* powf(0.5, i);
+    for ( i = 1; i <= QqQ; i++ )
+    {
+		//UPP = day_SoilN_demand;// / (float)QqQ;//* powf(0.5, i);
+	    layer_up = 0.0;
+
+		/*if(ddupn[ccwc] > 0.0)
+		{
+			float uu = 0.05;//0.25
+			float vv = ddupn[ccwc] * uu;			
+			layer_demand = UPP + vv;
+			ddupn[ccwc] -= vv;
+		}
+		else
+		{*/
+			layer_demand = UPP;
+	
+			float ava_nh4, ava_nh3, ava_no3;
+			float layer_demand1, layer_demand2, layer_demand3;
+
+			ava_no3 = no3[i];
+			ava_nh4 = nh4[i];
+			ava_nh3 = nh3[i];
+
+			float TotalAN = no3[i]+ nh4[i] + nh3[i] + 0.0000001;
+
+			layer_demand1 = layer_demand * no3[i] / TotalAN;
+
+			layer_demand2 = layer_demand * nh4[i] / TotalAN;
+
+			layer_demand3 = layer_demand * nh3[i] / TotalAN;
+
+			if ( layer_demand1 <= ava_no3 )
+			{
+			layer_up_no3 = layer_demand1 ;
+			}
+			else
+			{
+			layer_up_no3 = ava_no3;
+			}
+
+			if ( layer_demand2 <= ava_nh4 )
+			{
+			layer_up_nh4 = layer_demand2 ;
+			}
+			else
+			{
+			layer_up_nh4 = ava_nh4;
+			}
+
+			if ( layer_demand3 <= ava_nh3 )
+			{
+			layer_up_nh3 = layer_demand3 ;
+			}
+			else
+			{
+			layer_up_nh3 = ava_nh3;
+			}
+
+		
+		float UPno3, UPnh4, UPnh3;
+		if(no3[i] >= layer_up_no3) 
+		{
+			UPno3 = layer_up_no3;
+			no3[i] -= UPno3;
+		}
+		else
+		{
+			UPno3 = no3[i];
+			no3[i] = 0.0;
+		}
+		day_nup[ccwc] += UPno3;
+	
+		if(nh4[i] >= layer_up_nh4) 
+		{
+			UPnh4 = layer_up_nh4;
+			nh4[i] -= UPnh4;
+		}
+		else
+		{
+			UPnh4 = nh4[i];
+			nh4[i] = 0.0;
+		}
+		day_nup[ccwc] += UPnh4;
+
+		if(nh3[i] >= layer_up_nh3) 
+		{
+			UPnh3 = layer_up_nh3;
+			nh3[i] -= UPnh3;
+		}
+		else
+		{
+			UPnh3 = nh3[i];
+			nh3[i] = 0.0;
+		}
+		day_nup[ccwc] += UPnh3;
+
+		if ( no3[i] < 0.0 ) no3[i] = 0.0;
+		if ( nh4[i] < 0.0 ) nh4[i] = 0.0;
+		if ( nh3[i] < 0.0 ) nh3[i] = 0.0;
+		
+		layer_up = UPno3 + UPnh4 + UPnh3;
+
+		UPP -= layer_up;
+		if(UPP<0.0) UPP = 0.0;
+
+/*		if ( layer_demand > layer_up )
+		{
+			 ddupn[ccwc] += (layer_demand - layer_up);
+		}
+		
+		if ( ddupn[ccwc] < 0.0 ) ddupn[ccwc] = 0.0;
+
+		if(i==QqQ) ddupn[ccwc] = 0.0;
+
+		float aN = day_clay_N - base_clay_N;
+		if(aN<0.0) aN=0.0;		
+*/
+		/*if(ddupn[ccwc]>0.00001&&aN>0.0&&day_clay_N>0.0)
+		{
+			float tN;
+			
+			tN = min(ddupn[ccwc], aN*0.05);//0.00005
+		
+			day_Nuptake_from_clayN += tN;
+
+			day_clay_N -= tN;
+
+			ddupn[ccwc] -= tN;			
+		}	*/
+
+    } //end of layer loop
+
+	//if(ddupn[ccwc]>0.00001&&WaterControl==2&&day_WT>-0.5&&FloodWater_N>0.0)//wetland plants
+	if(UPP>0.00001&&WaterControl==2&&day_WT>-0.5&&FloodWater_N>0.0)//wetland plants
+	{
+			float Wn=0.0;
+			
+			if(FloodWater_N>0.0)
+			{
+				//if(ddupn[ccwc]>=FloodWater_N)
+				if(UPP>=FloodWater_N)
+				{
+					Wn = FloodWater_N; 
+					FloodWater_N = 0.0;
+					UPP -= Wn;
+				}
+				else
+				{
+					Wn = UPP;//ddupn[ccwc]; 
+					FloodWater_N -= Wn;
+					UPP = 0.0;//ddupn[ccwc] = 0.0;
+				}
+			}
+			
+			day_nup[ccwc] += Wn;
+	}
+
+	day_nup[ccwc] += day_Nuptake_from_clayN;
+
+	for ( i = 1; i <= q; i++ )
+    {
+		clay_nh4[i] = day_clay_N * powf(0.5, i);
+	}
+
+    if (seed[ccwc]==grow_days[ccwc]-1) UPP = 0.0;//ddupn[ccwc] = 0.0;
+
+   // N stress
+   if(day_N_demand2[ccwc] > 0.0)
+     N_stress[ccwc] = (day_nup[ccwc]+day_plant_nh3[ccwc]+day_fixN[ccwc])/day_N_demand2[ccwc];
+   else
+     N_stress[ccwc] = 1.0;
+
+   N_stress[ccwc] = min(1.0, max(0.0, N_stress[ccwc]));
+
+#ifdef PHOSPHOROUS
+   //P uptake by crop
+   day_P_demand[ccwc] = (day_nup[ccwc]+day_plant_nh3[ccwc]+day_fixN[ccwc]) / 15.0;//Koerselman and Meuleman, 1996, J. of Applied Ecology 33:1441-1450.
+   
+   for ( i = 1; i <= q; i++ )
+   {
+		if(LabP[i]>0.0&&day_P_demand[ccwc]>0.0)
+		{
+			if(day_P_demand[ccwc]>=LabP[i]) 
+			{
+				day_P_uptake[ccwc] += LabP[i];
+				day_P_demand[ccwc] -= LabP[i];
+				LabP[i] = 0.0;
+			}
+			else
+			{
+				day_P_uptake[ccwc] += day_P_demand[ccwc];
+				day_P_demand[ccwc] = 0.0;
+			}
+		}
+   }   
+   plantP[ccwc] += day_P_uptake[ccwc];
+   GrainP[ccwc] += 0.6 * day_P_uptake[ccwc];
+   LeafP[ccwc] += 0.2 * day_P_uptake[ccwc];
+   StemP[ccwc] += 0.1 * day_P_uptake[ccwc];
+   RootP[ccwc] += 0.1 * day_P_uptake[ccwc];
+
+#endif
+ 
+}
+
+void class_model::total_crop_N(int ccwc)
+{	
+    Day_GrowthN[ccwc] = day_nup[ccwc] + day_fixN[ccwc] + day_plant_nh3[ccwc];
+	plantn[ccwc] += Day_GrowthN[ccwc];//N existing in plants
+
+	PlantTakeN[ccwc] += Day_GrowthN[ccwc]; //N stored in plants in life cycle	 
+	CropSumN[ccwc] += Day_GrowthN[ccwc];//crop life-time obtained N
+	yr_plantn[ccwc] += Day_GrowthN[ccwc];//N taken by plants only in this calendar year
+	yr_fixn[ccwc] += day_fixN[ccwc];//N fixed by plants in this calendar year
+	//if(Day_GrowthN[ccwc]>0.0) CropEndN[ccwc] = plantn[ccwc];
+}
+
+void class_model::biomass_N_partition(int ccwc)
+{
+   float f_shoot=0.0;
+
+   float CTF, GST, GGG;				
+
+	if(C_type[ccwc]==4) //C4 type crops
+	{
+		CTF = 0.5;//1.0;
+		GST = 0.5;//0.4;//grain filling stage
+	//	GGG = 5.0;
+	}
+	else //C3 type crops
+	{
+		CTF = 0.2;//0.4;
+		GST = 0.5;//grain filling stage
+	//	GGG = 1.7;
+	}
+
+	if(PGI[ccwc]<0.1)
+	{rootFracIncrease=0.0;}
+float newRoot,maxPartIncrease;
+
+
+
+float dynRootFrac,dynGrainFrac,dynStrawFrac,dynStemFrac,dynLeafFrac,dynRootCN,dynStemCN,dynLeafCN;//Code for dynamic fractions of crop
+
+dynRootFrac=((((110.4 * pow(PGI[ccwc],3)) - (145.44 * pow(PGI[ccwc],2)) - (40.614 * PGI[ccwc]) + 90.869) / 100) + ((root[ccwc] - 0.15) * PGI[ccwc]));
+
+/*
+if(day_DWater[ccwc]<1.0||N_stress[ccwc]<1.0)
+{
+rootFracIncrease+=(dynRootFrac *.05);
+}
+*/
+//newRoot=dynRootFrac + min((1.0-dynRootFrac), max(0.0,maxPartIncrease))*(1-min(day_DWater[ccwc],N_stress[ccwc]))*(1-dynRootFrac);
+
+
+float repphaseindex = PGI[ccwc] - GST;						//the reproduction phase index equals the plant growth index grain minus 0.4
+if (PGI[ccwc] < GST) repphaseindex = 0;
+dynGrainFrac=(((35.3621172653138 * pow(repphaseindex,5)) - (39.2676242682337 * pow (repphaseindex, 4)) + (7.55435245133936 * pow(repphaseindex, 3)) + (2.46187847239896 * pow(repphaseindex,2)) + (0.470285559593467 * repphaseindex)) + ((grain[ccwc] - 0.4465)*repphaseindex*2));
+dynStrawFrac=(1-(dynRootFrac+dynGrainFrac));
+dynLeafFrac=dynStrawFrac*leaf[ccwc]/(leaf[ccwc]+stem[ccwc]);
+dynStemFrac=dynStrawFrac*stem[ccwc]/(leaf[ccwc]+stem[ccwc]);
+
+dynRootCN=(71.0141978359679 * pow(PGI[ccwc],3) - 13.8128991003396 * pow(PGI[ccwc],2) + 14.2553720136202 * PGI[ccwc] + 6.69085249154296) + ((rootcn[ccwc] - 78.14)*(PGI[ccwc]*pow(PGI[ccwc],2)));
+dynStemCN=(71.0141978359679 * pow(PGI[ccwc],3) - 13.8128991003396 * pow(PGI[ccwc],2) + 14.2553720136202 * PGI[ccwc] + 6.69085249154296) + ((stemcn[ccwc] - 78.14)*(PGI[ccwc]*pow(PGI[ccwc],2)));
+dynLeafCN=(71.0141978359679 * pow(PGI[ccwc],3) - 13.8128991003396 * pow(PGI[ccwc],2) + 14.2553720136202 * PGI[ccwc] + 6.69085249154296) + ((leafcn[ccwc] - 78.14)*(PGI[ccwc]*pow(PGI[ccwc],2)));
+
+
+
+		f_root[ccwc] = dynRootFrac;
+		f_grain[ccwc] = dynGrainFrac;
+		f_stem[ccwc] = dynStemFrac;
+		f_leaf[ccwc] = dynLeafFrac;
+
+
+
+
+
+
+
+if(crop[ccwc]==57)
+		{
+			
+
+/*
+CString TESTFILE;
+FILE *pFile=NULL;
+TESTFILE.Format("%s\\Record\\grainfill.txt", OUTPUT);
+pFile = fopen (TESTFILE,"r");
+fscanf(pFile, "%f",&grainFill);
+fclose (pFile);
+GST=grainFill;
+*/
+		}
+
+
+
+   if (PGI[ccwc] > 0.0)
+   {
+		if(crop[ccwc]==7) GST = 0.2;
+		else if(crop[ccwc]==53) GST = 0.3;
+
+		//if_root[ccwc] = CTF * (root[ccwc] + (0.6-root[ccwc])*(0.9-PGI[ccwc])/0.9);//0.4
+	//	if(f_root[ccwc]<root[ccwc]) f_root[ccwc] = root[ccwc];
+
+		if(crop[ccwc]==7) f_root[ccwc] = root[ccwc];//sugarcane
+
+		if(LandUse==6)//trees
+		{
+			if(PGI[ccwc] < GST) 
+			{
+				float TBN = 1.0/leafcn[ccwc] + 1.0/stemcn[ccwc] + 1.0/rootcn[ccwc];
+				f_grain[ccwc] = 0.0;
+				f_leaf[ccwc] = (1.0/leafcn[ccwc]) / TBN;
+				f_stem[ccwc] = (1.0/stemcn[ccwc]) / TBN;
+				f_root[ccwc] = (1.0/rootcn[ccwc]) / TBN;
+			}
+			else 
+			{
+				f_grain[ccwc] = grain[ccwc];				
+				f_leaf[ccwc] = leaf[ccwc];
+				f_stem[ccwc] = stem[ccwc];
+				f_root[ccwc] = root[ccwc];
+			}
+		}
+		else
+		{
+			
+				
+					//Reset variables for Heat stress routine at Anthesis for Wheat
+				if(PGI[ccwc]<0.50)
+				{
+				   maxTempAvg=0.0;
+					countTemp=0;
+					harvIdxFlag=1;
+
+				}
+
+				//For Anthesis in Spring Wheat come up with the Maximum Temperature average 
+				if(PGI[ccwc] >0.50 && PGI[ccwc]<0.6&&crop[ccwc]==57)
+					{				
+					 
+					
+						maxTempAvg+=air_temp;
+						countTemp+=1;
+						
+					
+
+					//maxTempAvg=max_temp+maxTempAvg;//averagetemp maxTempAvg=max_temp+maxTempAvg;
+					 //countTemp+=1;
+					}
+				if(PGI[ccwc] >0.50 && PGI[ccwc]<0.6&&crop[ccwc]==3)
+					{				
+					 
+					
+						maxTempAvg+=air_temp;
+						countTemp+=1;
+						
+					
+
+					//maxTempAvg=max_temp+maxTempAvg;//averagetemp maxTempAvg=max_temp+maxTempAvg;
+					 //countTemp+=1;
+					}
+				
+				if(PGI[ccwc] >0.50 && PGI[ccwc]<0.6&&crop[ccwc]==6)
+					{				
+					 
+					if(maxTempAvg<max_temp)
+					{maxTempAvg=max_temp;}
+
+					//maxTempAvg=max_temp+maxTempAvg;//averagetemp maxTempAvg=max_temp+maxTempAvg;
+					 //countTemp+=1;
+					}
+						if(PGI[ccwc] >0.50 && PGI[ccwc]<0.6&&crop[ccwc]==8)
+					{				
+					 
+					if(maxTempAvg<max_temp)
+					{maxTempAvg=max_temp;}
+
+					//maxTempAvg=max_temp+maxTempAvg;//averagetemp maxTempAvg=max_temp+maxTempAvg;
+					 //countTemp+=1;
+					}
+						if(PGI[ccwc] >0.50 && PGI[ccwc]<0.6&&crop[ccwc]==2)
+					{				
+					 
+					if(maxTempAvg<max_temp)
+					{maxTempAvg=max_temp;}
+
+					//maxTempAvg=max_temp+maxTempAvg;//averagetemp maxTempAvg=max_temp+maxTempAvg;
+					 //countTemp+=1;
+					}
+							if(PGI[ccwc] >0.50 && PGI[ccwc]<0.6&&crop[ccwc]==1)
+					{				
+					 
+					if(maxTempAvg<max_temp)
+					{maxTempAvg=max_temp;}
+
+					//maxTempAvg=max_temp+maxTempAvg;//averagetemp maxTempAvg=max_temp+maxTempAvg;
+					 //countTemp+=1;
+					}
+				
+					//routine for Harvest Index reducxtion for corn taken from Carberry et al 1989 Testing the CERRES-Maize Simulation Model
+					float harvFact = 0.0;
+					float newHi = 0.0;
+					float changeHi=0.0;
+
+
+
+
+			if(PGI[ccwc] < GST) 
+			{
+				
+			}
+			else
+			{
+
+//Routine for reduced Harvest Index due to Heat stress from Anthesis based on work of Ferris and Wheeler 1998
+
+			float harvSlope = -0.0143;
+			float harvFact = 0.0;
+			float newHi = 0.0;
+			float cropTempAdd =0.0;
+			float changeHi=0.0;
+
+
+			
+			
+			if (crop[ccwc]==6||crop[ccwc]==8)
+			{cropTempAdd = 8.0;}
+			if (crop[ccwc]==57)
+			{cropTempAdd = 2.0;}
+			if (crop[ccwc]==2||crop[ccwc]==1)
+			{cropTempAdd = 8.0;}			
+			
+			if(crop[ccwc]==57&&harvIdxFlag==1&&PGI[ccwc]>=0.6)
+			{
+				maxTempAvg=maxTempAvg/countTemp;
+				countTemp=0;
+			if(maxTempAvg>(OptimumT[ccwc]+cropTempAdd)) //Y.Gan 2004 Canola and Mustard response to short periods of temperature and water stress
+				{
+				
+				changeHi=((1-(-15.097*maxTempAvg+407.77)/100)*grain[ccwc]);
+				if((grain[ccwc]-changeHi)>0.05)
+					{
+					grain[ccwc]-=changeHi;
+					stem[ccwc]+=changeHi/2;
+					leaf[ccwc]+=changeHi/2;
+					}
+				else
+					{
+					 stem[ccwc]+= (grain[ccwc]-0.05)/2;
+					 leaf[ccwc]+= (grain[ccwc]-0.05)/2;
+					 grain[ccwc]=0.05;
+					}
+					harvIdxFlag=0;
+				}
+			}
+
+
+
+			if(harvIdxFlag==1&&crop[ccwc]==6||crop[ccwc]==2&&harvIdxFlag==1||crop[ccwc]==8&&harvIdxFlag==1)
+				{
+				//maxTempAvg=maxTempAvg/countTemp; //for average calc
+					if(maxTempAvg>(OptimumT[ccwc]+cropTempAdd))
+					{harvFact=(OptimumT[ccwc]+cropTempAdd-maxTempAvg)*harvSlope;
+					newHi= ((0.44-harvFact)*grain[ccwc]/0.44);
+					changeHi=(grain[ccwc]-newHi);
+					if((grain[ccwc]-changeHi)>0.05)
+					{
+					grain[ccwc]-=changeHi;
+					stem[ccwc]+=changeHi/2;
+					leaf[ccwc]+=changeHi/2;
+					}
+					else
+					{
+					 stem[ccwc]+= (grain[ccwc]-0.05)/2;
+					 leaf[ccwc]+= (grain[ccwc]-0.05)/2;
+					 grain[ccwc]=0.05;
+					}
+
+					//grain[ccwc]-=changeHi;
+					//straw[ccwc]+=changeHi;
+					harvIdxFlag=0;
+					}
+
+				}
+
+
+			if(harvIdxFlag==1&&crop[ccwc]==3&&PGI[ccwc]>=0.6)
+				{
+				
+				maxTempAvg=maxTempAvg/countTemp;
+				countTemp=0;
+					if(maxTempAvg>25)
+					{
+				
+				changeHi=grain[ccwc]-((-0.006*maxTempAvg*maxTempAvg+0.3075*maxTempAvg-2.945)*grain[ccwc]);
+				if((grain[ccwc]-changeHi)>0.05)
+					{
+					grain[ccwc]-=changeHi;
+					stem[ccwc]+=changeHi/2;
+					leaf[ccwc]+=changeHi/2;
+					}
+				else
+					{
+					 stem[ccwc]+= (grain[ccwc]-0.05)/2;
+					 leaf[ccwc]+= (grain[ccwc]-0.05)/2;
+					 grain[ccwc]=0.05;
+					}
+					harvIdxFlag=0;
+				}
+
+				}
+	
+		
+		
+		
+		if(harvIdxFlag==1&&crop[ccwc]==1)
+				{
+				//maxTempAvg=maxTempAvg/countTemp; //for average calc
+				if(maxTempAvg>(OptimumT[ccwc]+cropTempAdd))
+					{
+						harvFact=1-(maxTempAvg-38.0)*0.019;
+						newHi=(harvFact*grain[ccwc]);
+						changeHi=(grain[ccwc]-newHi);
+			
+							if(newHi>0.05) //ensure that grain fraction remains above 0.05
+								{
+								grain[ccwc]-=changeHi;
+								stem[ccwc]+=changeHi/2;
+								leaf[ccwc]+=changeHi/2;
+								}
+							else
+								{
+								 stem[ccwc]+= (grain[ccwc]-0.05)/2;
+								leaf[ccwc]+= (grain[ccwc]-0.05)/2;
+								grain[ccwc]=0.05;
+								}
+						harvIdxFlag=0;
+					}
+
+
+				}
+   
+			harvIdxFlag=0;
+		 
+			//float finalGrainStage;
+			//if(crop[ccwc]==57)
+			//{finalGrainStage=.89;}
+		//	else
+			//{finalGrainStage=1.0;}
+
+													
+			
+			}//end loop PGI<GST
+			
+		}	//end loop land type Tree or not
+   }
+   else// if PGI <= 0.0 ...never seems to happen.
+   {		
+
+
+
+    f_root[ccwc] = 0.0;
+     f_grain[ccwc] = 0.0;
+	f_leaf[ccwc] = 0.0;
+    f_stem[ccwc] = 0.0;
+   }
+
+
+
+
+
+
+
+
+
+
+  float newPlantTotalN,newPlantTotalC,oldLeafN,oldStemN,oldRootN,oldGrainN;
+  newPlantTotalN=Day_GrowthN[ccwc]+plantn[ccwc];
+  newPlantTotalC=newPlantTotalN*plantcn[ccwc];//estimating off plantcn[ccwc]...would need to change this if started working with dynamic C:N ratio
+
+	oldLeafN=LeafN[ccwc];
+	oldStemN=StemN[ccwc];
+	oldRootN=RootN[ccwc];
+	oldGrainN=GrainN[ccwc];
+
+
+  LeafN[ccwc] = newPlantTotalC*f_leaf[ccwc]/leafcn[ccwc];
+   StemN[ccwc]  = newPlantTotalC*f_stem[ccwc]/stemcn[ccwc];
+   RootN[ccwc] = newPlantTotalC*f_root[ccwc]/rootcn[ccwc];
+  GrainN[ccwc] = newPlantTotalC*f_grain[ccwc]/graincn[ccwc];
+
+ 
+
+
+  DayGrow_LeafN[ccwc] = LeafN[ccwc]-oldLeafN; 
+  DayGrow_StemN[ccwc] = StemN[ccwc]-oldStemN;
+  DayGrow_RootN[ccwc] =  RootN[ccwc]-oldRootN;
+  DayGrow_GrainN[ccwc] =  GrainN[ccwc]-oldGrainN;
+  
+  DayGrow_LeafN[ccwc] = f_leaf[ccwc]*Day_GrowthN[ccwc]; 
+  DayGrow_StemN[ccwc] = f_stem[ccwc]*Day_GrowthN[ccwc];
+  DayGrow_RootN[ccwc] =  f_root[ccwc]*Day_GrowthN[ccwc];
+  DayGrow_GrainN[ccwc] =  f_grain[ccwc]*Day_GrowthN[ccwc];
+  
+
+
+
+
+   
+
+
+
+   //Daily crop C increase
+	if(LandUse==6)//trees
+	{
+		Day_C_growth[ccwc] = plantcn[ccwc] * Day_GrowthN[ccwc];
+		dayG_grain[ccwc] = Day_C_growth[ccwc] * f_grain[ccwc];
+		dayG_root[ccwc] = Day_C_growth[ccwc] * f_root[ccwc];
+		dayG_leaf[ccwc] = Day_C_growth[ccwc] * f_leaf[ccwc];
+		dayG_stem[ccwc] = Day_C_growth[ccwc] * f_stem[ccwc];
+		
+		YrG_grain[ccwc] += dayG_grain[ccwc];
+		YrG_leaf[ccwc] += dayG_leaf[ccwc];
+		YrG_stem[ccwc] += dayG_stem[ccwc];
+		YrG_root[ccwc] += dayG_root[ccwc];
+
+		Root_Wt[ccwc] += dayG_root[ccwc];
+		Grain_Wt[ccwc] += dayG_grain[ccwc];
+		Leaf_Wt[ccwc] += dayG_leaf[ccwc];
+		Stem_Wt[ccwc] += dayG_stem[ccwc];
+
+	}
+	else//normal annual crops
+    {
+
+
+
+
+
+
+
+
+	
+
+
+
+		//Daily biomass growth	
+
+
+		dayG_grain[ccwc] = DayGrow_GrainN[ccwc] * graincn[ccwc];//This would need to be based off the C growth.
+		dayG_root[ccwc] = DayGrow_RootN[ccwc] * rootcn[ccwc];
+		dayG_leaf[ccwc] = DayGrow_LeafN[ccwc] * leafcn[ccwc];
+		dayG_stem[ccwc] = DayGrow_StemN[ccwc] * stemcn[ccwc];
+		Day_C_growth[ccwc] = dayG_grain[ccwc] + dayG_root[ccwc] + dayG_leaf[ccwc] + dayG_stem[ccwc];
+		
+	    Grain_Wt[ccwc] = GrainN[ccwc] * graincn[ccwc];
+	Leaf_Wt[ccwc] = LeafN[ccwc] * leafcn[ccwc];
+	Stem_Wt[ccwc] = StemN[ccwc] * stemcn[ccwc];
+	Root_Wt[ccwc] = RootN[ccwc] * rootcn[ccwc];
+	
+	
+		
+
+
+		YrG_grain[ccwc] += dayG_grain[ccwc];
+		YrG_leaf[ccwc] += dayG_leaf[ccwc];
+		YrG_stem[ccwc] += dayG_stem[ccwc];
+		YrG_root[ccwc] += dayG_root[ccwc];
+
+	}
+
+	if(Root_Wt[ccwc]>0.0) 
+	{
+		root_length[ccwc] = max_root_length[ccwc] * PGI[ccwc] * 2.0;
+		if(root_length[ccwc] > max_root_length[ccwc]) root_length[ccwc] = max_root_length[ccwc];
+	}
+	else
+		root_length[ccwc] = 0.0;
+
+ 	float Ftt = min(30.0, max(0.0,air_temp));
+
+	float f_PGI=PGI[ccwc];
+
+	if(PGI[ccwc]>0.4) f_PGI=0.4;
+}
+
+void class_model::ini_crop(int MODE, int ccwc)
+{
+	int i;
+	if(jday==jdseed[ccwc])
+	{
+		crop_flag[ccwc] = 1;
+		maturity_flag[ccwc] = 0;
+		WiltFlag[ccwc]=0;
+
+		read_in_vege(MODE, 1, ccwc);
+
+		if(crop[ccwc]==20||crop[ccwc]==64||crop[ccwc]==65) //irrigated paddy rice
+		{
+			wetland_flag = 1;
+			IrriRice_flag = 1;
+			RainfedRice_flag = 0;
+			DeepRice_flag = 0;
+			rice_maturity_flag = 0;
+		}		
+		else if(crop[ccwc]==46)//rainfed rice
+		{
+			wetland_flag = 1;
+			IrriRice_flag = 0;
+			RainfedRice_flag = 1;
+			DeepRice_flag = 0;
+		}
+		else if(crop[ccwc]==30)//deep-water rice
+		{
+			wetland_flag = 1;
+			IrriRice_flag = 0;
+			RainfedRice_flag = 0;
+			DeepRice_flag = 1;
+		}
+		else
+		{
+			wetland_flag = 0;
+			IrriRice_flag = 0;
+			RainfedRice_flag = 0;
+			DeepRice_flag = 0;
+		}
+
+		if(crop[ccwc]==20&&Transplant[ccwc]==1&&TDD[ccwc]==0.0)
+		{
+			TDD[ccwc] = 100.0;
+			Grain_Wt[ccwc] = 0.0;
+			Leaf_Wt[ccwc] = 30.0;
+			Stem_Wt[ccwc] = 30.0;
+			Root_Wt[ccwc] = 20.0;
+			plantn[ccwc] = 4.0;
+			seed[ccwc] = 30;			
+		}
+		else
+		{
+			//seed[ccwc] = 1;
+
+			if(PerennialFlag[ccwc]==0)
+			{
+				Grain_Wt[ccwc] = 0.0;
+				Leaf_Wt[ccwc] = 0.0;
+				Stem_Wt[ccwc] = 0.0;
+				Root_Wt[ccwc] = 0.0;
+				GrainN[ccwc] = 0.0;
+				LeafN[ccwc] = 0.0;
+				StemN[ccwc] = 0.0;
+				RootN[ccwc] = 0.0;
+			}
+		}
+	
+	}
+}
+
+void class_model::growth_stage(int ccwc)
+{
+    float lai1, lai2;
+    float specific_leaf_weight; //kg C/ha
+
+/*	if(crop[ccwc]==20&&Transplant[ccwc]==1&&TDD[ccwc]==0.0)
+	{
+		TDD[ccwc] = 100.0;
+		Leaf_Wt[ccwc] = 30.0;
+		Stem_Wt[ccwc] = 30.0;
+		Root_Wt[ccwc] = 20.0;
+		plantn[ccwc] = 40.0;
+		seed[ccwc] = 30;
+
+		//planting_flag = 1;
+	}*/
+
+    if (crop[ccwc]>0&&seed[ccwc]>GermDays[crop[ccwc]])
+    {
+		float T_limit, LLT;
+		
+		if (crop[ccwc]==2) //winter crops
+			T_limit = WinterWheat_LimitiT;
+		else T_limit = 0.0;
+
+		if(LandUse==4) LLT = min_temp;//dry grassland
+		else LLT = air_temp;
+
+		//if(LLT>=0.0)
+		if(LLT>=T_limit)
+		{
+		  day_TDD[ccwc] = LLT;
+		}
+		else
+		{
+		  day_TDD[ccwc] = 0.0;
+		  //TDD[ccwc] = 0.0;
+		}
+
+		if (TDD[ccwc] < max_TDD[ccwc]) 
+			TDD[ccwc] += day_TDD[ccwc];
+		
+		if(GrassFlag[ccwc]==1&&air_temp<=5.0) 
+			PGI[ccwc] -= 0.1;
+		else
+		{OLDPGI[ccwc]=PGI[ccwc];
+		PGI[ccwc] = TDD[ccwc] / max_TDD[ccwc];}//plant growth index
+
+		PGI[ccwc] = max(0.0, min(1.0, PGI[ccwc]));
+
+		//specific_leaf_weight = 1500.0;//2.0 * (1620.3 * PGI[ccwc] + 64.0);// kg C/ha per LAI
+
+		//lai[ccwc] = (Leaf_Wt[ccwc] + Stem_Wt[ccwc] + Grain_Wt[ccwc]) / specific_leaf_weight * lai_index[ccwc];
+    }
+    else
+    {
+		//lai[ccwc] = 0.0;
+		//lai[ccwc] = (Leaf_Wt[ccwc] + Stem_Wt[ccwc] + Grain_Wt[ccwc]) / specific_leaf_weight * lai_index[ccwc];
+		day_TDD[ccwc] = 0.0;
+		PGI[ccwc] = 0.0;
+    }
+
+	u_PGI = PGI[ccwc];
+}
+
+void class_model::root_respir(int ccwc)
+{
+
+    float Tfactor, RootAge, age;
+	int i;
+
+    if (air_temp<= 0.0)
+    {
+       Tfactor = 0.0;
+    }
+    else
+    {
+       Tfactor = air_temp / 35.0;
+    }
+
+    if ( seed[ccwc] > 0 )
+    {
+		age=(float)seed[ccwc]/(float)grow_days[ccwc];
+		if(age<0.0) age = 0.0;
+	  
+	  RootAge = -2.1091*age*age + 2.7486*age + 0.0614;
+	  if(RootAge < 0.0) RootAge = 0.0;
+    }
+    else
+    {
+	  RootAge = 0.0;
+    }
+
+	if(wetland_flag==1)
+	{
+		float soilte = max(4.0, (float)st[1]); 
+		float SoilD = 6.0 / soilte;
+		float RootF;
+		if(PGI[1]<0.5) RootF = PGI[1];
+		else RootF = 1.0 - PGI[1];
+		RootF = max(0.0, min(1.0, RootF));
+
+		day_rco2[ccwc] = 0.1 * Root_Wt[ccwc] * RootF * Tfactor * SoilD;//0.1
+
+	}
+	else if(crop[ccwc]==30)
+	{
+		float SoilD = 6.0 / (float)st[1];
+		
+		day_rco2[ccwc] = 500.0 * RootAge * Tfactor * SoilD; 
+	}
+	else if(crop[ccwc]==11||crop[ccwc]==12)//grass
+	{
+		float AgeFactor;
+		if(PGI[ccwc]<1.0) AgeFactor = -2.352*PGI[ccwc]*PGI[ccwc] + 1.645*PGI[ccwc] +0.7561;
+		else AgeFactor = 0.1;
+		if(AgeFactor<0.0) AgeFactor=0.0;
+
+		float Tf;
+		if(air_temp>0.0) Tf = air_temp/1.0;
+		else Tf = 0.0;
+
+		day_rco2[ccwc] = 0.2 * Root_Wt[ccwc] * Tfactor * AgeFactor * (float)(365-jday)/365.0;// + Tf;//0.1
+	}
+	else
+	{
+
+		float AgeFactor;
+		if(PGI[ccwc]<1.0) AgeFactor = -2.8348*PGI[ccwc]*PGI[ccwc] + 2.4848*PGI[ccwc] + 0.4554;//1.0 + (1.0-PGI)/(1.0+PGI);
+		else AgeFactor = 0.1;
+		if(AgeFactor<0.0) AgeFactor=0.0;
+		
+		if(crop[ccwc]==2) 
+		{
+			Tfactor = (air_temp - 4.0) / 4.0;
+			Tfactor = max(0.0, Tfactor);
+		}
+		else
+		{
+			if(PGI[ccwc]>0.4&&PGI[ccwc]<0.7) 
+			{
+				Tfactor = (air_temp - 10.0) / 6.0;
+				Tfactor = max(0.0, Tfactor);
+			}
+		}
+
+		day_rco2[ccwc] = 0.025 * Root_Wt[ccwc] * AgeFactor;//Tfactor;//0.025
+	}
+
+	if(LandUse==6)
+	{
+		day_rco2[ccwc] = 0.001 * Root_Wt[ccwc] * Tfactor;
+	}
+	
+	/*for(int i15=1; i15<=q; i15++)
+	{
+		root_CO2[i15] = (day_rco2[1]+day_rco2[2]+day_rco2[3]) / (float)q;
+	}*/
+
+	//root exudation
+	float TotalRootWT = Root_Wt[ccwc]; 
+	
+	if (TotalRootWT>0.0)//&&flood_flag==0)
+	{
+		 float bq = 0.3;
+		 float fPGI = 1.0 / (PGI[ccwc]+0.001);
+
+		 if(PerennialFlag[ccwc]==1) 
+			 fPGI = 0.2;
+		 else
+		 {
+			 if(u_PGI>0.5) 
+			 {
+				fPGI = 1.0 - u_PGI * 0.5;
+				fPGI *= 0.25;//Modified for CA rice of Maegen case ???
+			 }		
+		 }
+
+		//day_RootInput_DOC = TotalRootWT * bq * fPGI;//(kg C/ha/layer)
+		float ddDOC = 0.001 * (1.0 + PGI[ccwc]) * TotalRootWT;//Deng JIa's ref. 0.11 * Day_C_growth[ccwc] + 
+		   
+		if(ddDOC>0.0)
+		{
+			for(int i=1; i<=q; i++)
+			{
+				float RRdoc = (ddDOC / (float)q);
+				doc[i] += RRdoc;
+				root_doc[ccwc] += RRdoc;
+				day_RootInput_DOC += RRdoc;
+				//day_DOC_prod += RRdoc;
+			}
+		}
+	}
+	else
+	{
+	   
+	}     
+}
+
+void class_model::water_demand(float DayPET, int ccwc)
+{
+	PPT[ccwc] = wreq[ccwc] * day_N_demand[ccwc] * plantcn[ccwc] * 2.5 / 1000.0 / 10000.0;//m water
+/*
+	float FPT; 
+    if(plantn[ccwc]>0.0&&TDD[ccwc]<=max_TDD[ccwc])//&&crop_PT[ccwc]<=CropWaterDemand[ccwc])
+	{
+		PPT[ccwc] = CropWaterDemand[ccwc] * (day_TDD[ccwc] / max_TDD[ccwc]);
+
+		if(PPT[ccwc]>DayPET) PPT[ccwc] = DayPET;
+	}
+	else
+	{
+		PPT[ccwc] = 0.0;
+	}
+*/
+}
+
+float class_model::crop_transpiration(int irri_close, float PPTw, int ccwc)
+{
+	int l, hr=1;
+	float Fptt, LayerWaterDemand, LayerTrans, limit1;
+	float LayerH2Odemand = 0.0;
+		
+	int root_layer = (int)(root_length[1]/h[1])+1; 
+	if(root_layer>q) root_layer = q;
+
+	//DayPT0: daily all crops demand for water, mm
+	
+	DayPT1 = 0.0;//daily water taken by crops from soil	
+	
+	//1: crop get water from soil profile
+	if(PPTw>0.0)
+	{
+		root_layer = q;
+		LayerDeficit = 0.0;		
+
+		for (l=1; l<=q; l++)
+		{
+			LayerH2Odemand = PPTw / (float)q + DayCropWaterDeficit;//* powf(0.5, l) ;
+
+			float wiltptw = h[l] * sts[l] * wiltpt[l];
+			float fldcapw = h[l] * sts[l] * fldcap[l];
+
+			if(FilmEffect>0.0) wiltptw *= (1.0 - FilmEffect);
+
+			if(water[1][l]<=wiltptw)
+			{
+				LayerTrans = 0.0;
+			}
+			else
+			{
+				float Firri=1.0;
+			
+				float Fptt = Firri * (water[1][l] - wiltptw);
+				
+				if(Fptt>=LayerH2Odemand)
+				{
+					LayerTrans = LayerH2Odemand;
+					LayerH2Odemand = 0.0;	
+					DayCropWaterDeficit = 0.0;
+				}
+				else
+				{
+					LayerTrans = Fptt;
+					DayCropWaterDeficit = LayerH2Odemand - Fptt;				 
+				}
+
+				water[1][l] -= LayerTrans;
+				
+				if(water[1][l]<0.0)
+				{
+					LayerTrans += water[1][l];
+					water[1][l] = 0.0;
+				}
+			}
+
+			DayPT1 += LayerTrans;
+			LayerTrans = 0.0;
+		}//end of layer loop
+	}
+	
+	///////////crop get water from deep water pool
+	float PPTw1 = PPTw - DayPT1;
+	DayPT2 = 0.0;//daily water taken by crops from deep water pool
+
+	if(PPTw1>0.0&&WaterPool>0.0001) 
+	{
+		float add_water2=0.0;
+
+		if(PPTw1<=WaterPool*1)
+		{
+			add_water2 = PPTw1;
+			//DayPTdef = 0.0;
+		}
+		else
+		{
+			add_water2 = WaterPool*1;
+			//DayPTdef -= add_water2;
+		}
+
+		WaterPool -= add_water2;
+		DayPT2 = add_water2;//m water
+		add_water2 = 0.0;		
+	}
+
+	//////crop get water from irrigation water///////////////////////////////////////////
+	float PPTw2 = PPTw1 - DayPT2;
+	DayPT3 = 0.0;//daily water taken by crops from irrigation water
+
+	if(PPTw2>0.0&&irri_index>0.0)//index-irrigation
+	{
+			DayPT3 = PPTw2 * irri_index;
+
+			if(irri_close==0&&RainfedRice_flag==0) 
+			{
+				if(IrriMethod==0)//furrow irrigation
+				{
+					IrriWater = 5.0 * DayPT3;
+					TTT += 0.1 * IrriWater / 0.005;
+				}
+				else if(IrriMethod==1)//sprinkler
+				{
+					IrriWater = 4.0 * DayPT3;
+					TTT += 0.05 * IrriWater / 0.005;
+				}
+				else if(IrriMethod==2)//surface dripping
+				{
+					IrriWater = 3.0 * DayPT3;
+					TTT += 0.05 * IrriWater / 0.005;
+				}
+				else if(IrriMethod==3)//deep dripping
+				{
+					IrriWater = 2.0 * DayPT3;
+				}
+				else if(IrriMethod==4)//film mulch
+				{
+					IrriWater = 1.0 * DayPT3;
+				}
+
+				yr_irri += IrriWater;
+				day_irri += IrriWater;
+
+				if(IrriWater>DayPT3)
+				{
+					float AxcessH2O = IrriWater - DayPT3;
+					if(IrriMethod==0||IrriMethod==1||IrriMethod==2)
+						water[1][1] += AxcessH2O;
+					else
+						water[1][8] += AxcessH2O;				
+				}
+			}
+	}
+			
+	if(irri_index==0.0&&IrriWater>0.0)//event irrigation
+	{
+		float Accessibility[5] = {0.15, 0.5, 0.75, 1.0, 1.0};
+		float AccessibleH2O = Accessibility[IrriMethod] * IrriWater;
+
+		if(AccessibleH2O>=PPTw2) 
+			DayPT3 = PPTw2;
+		else
+			DayPT3 = AccessibleH2O;
+
+		if(IrriWater>DayPT3)
+		{
+			float AxcessH2O = IrriWater - DayPT3;
+			if(IrriMethod==0||IrriMethod==1||IrriMethod==2)
+				water[1][1] += AxcessH2O;
+			else
+				water[1][8] += AxcessH2O;				
+		}
+	}
+
+	float TotalDayPT = DayPT1 + DayPT2 + DayPT3;
+			
+	if(PPTw>TotalDayPT) 
+	{
+		DayCropWaterDeficit = PPTw - TotalDayPT;// m water
+		PPTw = 0.0;	
+	}
+
+
+	return(TotalDayPT);
+}
+
+void class_model::root_develop(int ccwc)
+{
+	if(jday==1&&(crop[1]==11||crop[1]==12)) 
+		root_depth[ccwc] = 0.2;
+	else
+		root_depth[ccwc] = 0.05 + PGI[ccwc] * 0.5;//m
+
+	root_q = (int)(root_depth[ccwc]/h[1])+1;//????
+}
+
+
+void class_model::weather_damage(int damage, float w_event, int ccwc)
+{
+	float Fdamage = w_event;
+	//float CropNLost;
+	Fdamage = max(0.0, min(1.0, Fdamage));
+
+	//float hail_damage_N = 0.0;
+
+	//for(int i=1; i<=CropNumbers; i++)
+	//{
+		//CropNLost = plantn[i] * Fdamage;
+		//hail_damage_N += CropNLost;
+		//plantn[i] -= CropNLost;
+
+		Root_Wt[ccwc] *= (1.0 - Fdamage);
+		Grain_Wt[ccwc] *= (1.0 - Fdamage);
+		Leaf_Wt[ccwc] *= (1.0 - Fdamage);
+		Stem_Wt[ccwc] *= (1.0 - Fdamage);
+		plantn[ccwc] *= (1.0 - Fdamage);
+		//PlantTakeN[i] *= (1.0 - Fdamage);
+		//maxmn[i] *= (1.0 - Fdamage);
+	//}
+}
+
+void class_model::frost_damage(int ccwc)
+{
+	float FiD;
+
+	//for(ccwc=1; ccwc<=CropNumbers; ccwc++)
+	{
+		if(crop[ccwc]!=2&&PGI[ccwc]<0.5)//not winter wheat
+		{
+			FiD = 1.0 + 0.08 * min_temp;
+			if(FiD<0.0) FiD=0.0;
+
+			Root_Wt[ccwc] *= FiD;
+			Grain_Wt[ccwc] *= FiD;
+			Leaf_Wt[ccwc] *= FiD;
+			Stem_Wt[ccwc] *= FiD;
+			plantn[ccwc] *= FiD;
+			PlantTakeN[ccwc] *= FiD;
+		}
+	}
+}
+
+void class_model::nh3_uptake_release(float *lai, float *day_soil_nh3, float *PlantTakeN, float *maxmn,
+									 float leaf_water, float cropht, float base_nh3,
+									 float *day_N_demand2, float *day_nup, float *day_fixN, float *day_DWater,
+									 float *day_plant_nh3, float *yr_NH3_deposit, int ccwc)
+{
+    float max_leaf_water;
+	float fpn, flm, vg, vca, x;
+
+    if (lai[ccwc] > 0.0 )
+    {
+		max_leaf_water = lai[ccwc] * .0002;
+
+	    fpn = 1.0 - PlantTakeN[ccwc] / maxmn[ccwc];
+	    if ( fpn < 0.0 ) fpn = 0.0;
+	    flm = 1.0;//leaf_water / max_leaf_water + 0.5;
+	    if ( flm > 1.0 ) flm = 1.0;
+	    vg = fpn * flm;//0.05
+	    vca = 0.3 * 10000.0;//cropht * 10000.0;
+	    //x = ((*day_soil_nh3 * powf(10.0, 9.0) / vca * lai[ccwc] / (lai[ccwc] + 10.0) * .01));
+		x = ((0.1 * powf(10.0, 9.0) / vca * lai[ccwc] / (lai[ccwc] + 10.0) * .01));
+	    if (x < 0.0) x = 0.0;
+		//if(x>1.0)
+		//	air_nh3 = base_nh3 * powf(x, 0.5);//0.5
+		//else
+		//	air_nh3 = base_nh3;
+
+		//air_nh3 = base_nh3;
+
+		float dD=0.0, pP=0.0;
+		if(maxmn[ccwc]>plantn[ccwc])
+		{
+			//float dD = 1.0 * day_N_demand[ccwc] - day_nup[ccwc] - day_fixN[ccwc];
+			dD = 0.1 * day_N_demand2[ccwc];// - day_nup[ccwc] - day_fixN[ccwc];
+			pP = vg * base_nh3 * lai[ccwc] * day_DWater[ccwc];// 0.864 *
+		}
+
+		if(N_stress[ccwc]<1.0&&day_N_demand2[ccwc]>0.0) //dD>0.0)
+		{
+			//day_plant_nh3[ccwc] = 0.0;
+			//if(dD>pP) day_plant_nh3[ccwc] = 0.9 * pP;//N uptake from atmospheric NH3 by crop
+			//else day_plant_nh3[ccwc] = 0.9 * dD;
+
+			dD = 1.0 * (1.0 - N_stress[ccwc]) / (1.0 + N_stress[ccwc]) * base_nh3 / (1.0 + base_nh3);//kg N/ha/day
+			day_plant_nh3[ccwc] = dD;
+		}
+		else
+			day_plant_nh3[ccwc] = 0.0;
+    }
+    else
+    {
+	    day_plant_nh3[ccwc] = 0.0;
+
+    }
+
+	crop_NH3_absorp[ccwc] += day_plant_nh3[ccwc];
+	*yr_NH3_deposit += day_plant_nh3[ccwc];
+}
+
+void class_model::crop_senescence(int ccwc)
+{
+	//All the litter from senescence will be incorporated in the soil
+	float dPG=0.0, dPL, dPW, dPR, sLeaf=0.0, sStem=0.0, sGrain=0.0, sRoot=0.0;
+	float AddC, AddN, AddCN, dInertC, AddP;
+	float AddC1, AddC2, AddC3;
+
+	if(LandUse==6)//trees
+	{
+		if(jday>200)
+		{
+			dPG = 0.05;
+			dPL = 0.001;
+			dPW = 0.0005 * TreeCurretAge[ccwc];
+			dPR = 0.00015;
+
+			if(Leaf_Wt[ccwc]>TreeLeafMin[ccwc])
+			{
+				sLeaf = Leaf_Wt[ccwc] * dPL;
+				Leaf_Wt[ccwc] -= sLeaf;
+			}
+
+			sGrain = Grain_Wt[ccwc] * dPG;							
+			Grain_Wt[ccwc] -= sGrain;
+			
+			sStem = Stem_Wt[ccwc] * dPW * 0.015;
+			Stem_Wt[ccwc] -= sStem;
+
+			sRoot = Root_Wt[ccwc] * dPR;
+			Root_Wt[ccwc] -= sRoot;	
+		}	
+		else
+		{
+				sGrain = 0.0;
+				sLeaf = 0.0;
+				sStem = 0.0;
+				sRoot = 0.0;
+
+				DayLeafSenes[ccwc]=0.0;
+				DayStemSenes[ccwc]=0.0;
+				DayRootSenes[ccwc]=0.0;
+				DayGrainSenes[ccwc]=0.0;
+		}
+	}
+	else if(PerennialFlag[ccwc]==1)
+	{
+		//if(PGI[ccwc]>0.8)//||plantn[ccwc]>maxmn[ccwc])//maturity_flag[ccwc]==1)
+		{
+			//TDD[ccwc] = 0.0;
+
+			dPG = 0.001 * (0.2 + PGI[ccwc]);
+
+			sLeaf = LeafN[ccwc] * dPG;
+			sStem = StemN[ccwc] * dPG;
+			sRoot = RootN[ccwc] * dPG * 0.5;
+			sGrain = GrainN[ccwc] * dPG;
+
+			if(sGrain+sLeaf+sStem+sRoot>0.0)
+			{
+				LeafN[ccwc] -= sLeaf;
+				StemN[ccwc] -= sStem;
+				RootN[ccwc] -= sRoot;
+				GrainN[ccwc] -= sGrain;	
+				plantn[ccwc] = LeafN[ccwc] + StemN[ccwc] + RootN[ccwc] + GrainN[ccwc]; 
+				if(plantn[ccwc]<0.0) plantn[ccwc] = 0.0;
+				
+				Leaf_Wt[ccwc] = LeafN[ccwc] * leafcn[ccwc];
+				Stem_Wt[ccwc] = StemN[ccwc] * stemcn[ccwc];
+				Root_Wt[ccwc] = RootN[ccwc] * rootcn[ccwc];
+				Grain_Wt[ccwc] = GrainN[ccwc] * graincn[ccwc];				
+				
+				//plantP[ccwc] = CropP[ccwc] * 0.01 * (Leaf_Wt[ccwc]+Stem_Wt[ccwc]+Root_Wt[ccwc]+Grain_Wt[ccwc]) / 0.4;
+				DayLeafSenes[ccwc] = sLeaf * leafcn[ccwc];
+				DayStemSenes[ccwc] = sStem * stemcn[ccwc];
+				DayRootSenes[ccwc] = sRoot * rootcn[ccwc];
+				DayGrainSenes[ccwc] = sGrain * rootcn[ccwc];
+
+				//ABOVE-GROUND litter incorporation
+				AddN = sLeaf + sStem + sGrain;
+				AddC = DayLeafSenes[ccwc] + DayStemSenes[ccwc] + DayGrainSenes[ccwc]; 
+				AddCN = AddC/AddN;
+				AddP = plantP[ccwc] * 0.01 * AddC /0.4;
+
+				alloc_litter_into_pools(&AddCN, &AddC, 1, &AddC1, &AddC2, &AddC3, &dInertC, 0, rcnrvl, rcnrl, rcnrr, nh4);
+
+				//float OutN = AddC1/rcnrvl + AddC2/rcnrl + AddC3/rcnrr;
+
+				rcvl[1] += AddC1;
+				rcl[1] += AddC2;
+				rcr[1] += AddC3;
+				OrgP[1] += AddP;
+
+				day_addC += (AddC1 + AddC2 + AddC3);
+				day_addrn += (AddC1 / rcnrvl + AddC2 / rcnrl + AddC3 / rcnrr);
+				yr_addtc += (AddC1 + AddC2 + AddC3);
+				yr_addtn += (AddC1 / rcnrvl + AddC2 / rcnrl + AddC3 / rcnrr);
+
+				AddC1 = 0.0;
+				AddC2 = 0.0;
+				AddC3 = 0.0;
+				AddP = 0.0;		
+				sGrain = 0.0;
+				sLeaf = 0.0;
+				sStem = 0.0;
+			}				
+		
+			//Root litter incorporation
+			if(sRoot>0.0)
+			{
+				AddCN = rootcn[ccwc];
+				for (int l = 1; l <= q; l++ )
+				{
+					if ( l >= 1 && l <= 3 )
+					{
+						AddC = DayRootSenes[ccwc] * 0.5 / 3.0;
+						AddP = plantP[ccwc] * 0.01 /0.4 * sRoot * 0.5 / 3.0;
+					}
+					if ( l >= 4 && l <= 6 )
+					{
+						AddC = DayRootSenes[ccwc] * 0.4 / 3.0;
+						AddP = plantP[ccwc] * 0.01 /0.4 * sRoot * 0.4 / 3.0;
+					}
+					if ( l >= 7 && l <= q )
+					{
+						AddC = DayRootSenes[ccwc] * 0.1 / (float)(q - 6);
+						AddP = plantP[ccwc] * 0.01 /0.4 * sRoot * 0.1 / (float)(q - 6);
+					}
+
+					alloc_litter_into_pools(&AddCN, &AddC, 10, &AddC1, &AddC2, &AddC3, &dInertC, 0, rcnrvl, rcnrl, rcnrr, nh4);
+					rcvl[l] += AddC1;
+					rcl[l] += AddC2;
+					rcr[l] += AddC3;
+					OrgP[l] += AddP;
+								
+					float AddToSoilN = sRoot/AddCN;
+
+					day_addC += (AddC1+AddC2+AddC3);
+					yr_addrc += (AddC1+AddC2+AddC3);
+					day_addrn += AddToSoilN;
+					yr_addrn += AddToSoilN;
+					yr_addrp += AddP;
+
+					sRoot = 0.0;
+					AddC1 = 0.0;
+					AddC2 = 0.0;
+					AddC3 = 0.0;
+					AddP = 0.0;
+				}
+
+			}
+		}
+	}
+	else //annual crops
+	{
+		
+float blah;
+blah=1.0;
+
+
+
+
+	}
+
+
+/*
+float TPN = Leaf_Wt[ccwc]/leafcn[ccwc] + Stem_Wt[ccwc]/stemcn[ccwc] + Root_Wt[ccwc]/rootcn[ccwc] + Grain_Wt[ccwc]/graincn[ccwc];
+
+	if(TPN>0.0)
+	{
+		LeafN[ccwc] = (Leaf_Wt[ccwc]/leafcn[ccwc]) / TPN * plantn[ccwc];
+		StemN[ccwc] = (Stem_Wt[ccwc]/stemcn[ccwc]) / TPN * plantn[ccwc];
+		RootN[ccwc] = (Root_Wt[ccwc]/rootcn[ccwc]) / TPN * plantn[ccwc];
+		GrainN[ccwc] = (Grain_Wt[ccwc]/graincn[ccwc]) / TPN * plantn[ccwc];
+	}
+
+	plantn[ccwc] = LeafN[ccwc] + StemN[ccwc] + RootN[ccwc] + GrainN[ccwc]; 
+	plantP[ccwc] = LeafP[ccwc] + StemP[ccwc] + RootP[ccwc] + GrainP[ccwc]; 
+
+	DayLeafSenes[ccwc]=sLeaf;
+	DayStemSenes[ccwc]=sStem;
+	DayRootSenes[ccwc]=sRoot;
+	DayGrainSenes[ccwc]=sGrain;
+
+	if(sGrain+sLeaf+sStem+sRoot>0.0)
+	{	
+		AddN = sLeaf/leafcn[ccwc] + sStem/stemcn[ccwc] + sRoot/rootcn[ccwc] + sGrain/graincn[ccwc];
+
+		plantn[ccwc] -= AddN;
+		if(plantn[ccwc]<0.0) plantn[ccwc] = 0.0;	
+
+		// Add dead shoot in stable
+		AddC = sLeaf+sStem+sGrain; 
+		AddCN = leafcn[ccwc];//AddC / AddN;?
+		AddP = plantP[ccwc] * 0.01 * AddC /0.4;
+	//	AddP = CropP[ccwc] * 0.01 * AddC /0.4;
+
+		float AddC1, AddC2, AddC3;
+		
+		alloc_litter_into_pools(&AddCN, &AddC, 1, &AddC1, &AddC2, &AddC3, &dInertC, 0, rcnrvl, rcnrl, rcnrr, nh4);
+
+		float OutN = AddC1/rcnrvl + AddC2/rcnrl + AddC3/rcnrr;
+
+		rcvl[1] += AddC1;
+		rcl[1] += AddC2;
+		rcr[1] += AddC3;
+		OrgP[1] += AddP;
+
+		day_addC += (AddC1 + AddC2 + AddC3);
+		day_addrn += (AddC1 / rcnrvl + AddC2 / rcnrl + AddC3 / rcnrr);
+		yr_addtc += (AddC1 + AddC2 + AddC3);
+		yr_addtn += (AddC1 / rcnrvl + AddC2 / rcnrl + AddC3 / rcnrr);
+
+		AddC1 = 0.0;
+		AddC2 = 0.0;
+		AddC3 = 0.0;
+		AddP = 0.0;
+
+		//root litter incorporation
+		AddCN = rootcn[ccwc];
+		for (int l = 1; l <= q; l++ )
+		{
+			if ( l >= 1 && l <= 3 )
+			{
+				AddC = sRoot * 0.5 / 3.0;
+				AddP = RootP[ccwc] * 0.01 * sRoot * 0.5 / 3.0 /0.4;
+				//AddP = CropP[ccwc] * 0.01 /0.4 * sRoot * 0.5 / 3.0;
+			}
+			if ( l >= 4 && l <= 6 )
+			{
+				AddC = sRoot * 0.4 / 3.0;
+				AddP = RootP[ccwc] * 0.01 * sRoot * 0.5 / 3.0 /0.4;
+			//	AddP = CropP[ccwc] * 0.01 /0.4 * sRoot * 0.4 / 3.0;
+			}
+			if ( l >= 7 && l <= q )
+			{
+				AddC = sRoot * 0.1 / (float)(q - 6);
+				AddP = RootP[ccwc] * 0.01 * sRoot * 0.5 / 3.0 /0.4;
+			//	AddP = CropP[ccwc] * 0.01 /0.4 * sRoot * 0.1 / (float)(q - 6);
+			}
+
+			alloc_litter_into_pools(&AddCN, &AddC, 10, &AddC1, &AddC2, &AddC3, &dInertC, 0, rcnrvl, rcnrl, rcnrr, nh4);
+			rcvl[l] += AddC1;
+			rcl[l] += AddC2;
+			rcr[l] += AddC3;
+			OrgP[l] += AddP;
+			AddC1 = 0.0;
+			AddC2 = 0.0;
+			AddC3 = 0.0;
+			AddP = 0.0;
+		}
+
+		float AddToSoilC, AddToSoilN;
+		AddToSoilC = sRoot;
+		AddToSoilN = sRoot/AddCN;
+
+		day_addC += AddToSoilC;
+		yr_addrc += AddToSoilC;
+		day_addrn += AddToSoilN;
+		yr_addrn += AddToSoilN;
+
+		sRoot = 0.0;
+
+	}
+
+	PresentBiomass[ccwc] = Root_Wt[ccwc] + Grain_Wt[ccwc] + Leaf_Wt[ccwc] + Stem_Wt[ccwc];
+
+*/
+
+}
+
+void class_model::crop_rejuvenation(int ccwc)
+{
+	
+}

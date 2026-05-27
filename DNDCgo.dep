@@ -1,0 +1,170 @@
+# Microsoft Developer Studio Generated Dependency File, included by DNDCgo.mak
+
+.\Dndc_balance.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_balloon.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_CH4.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_crop0.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_crop1.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_crop2.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_crop3.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_crop4.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_crop5.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_data.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_Eh.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_farming.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_main.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_mapping.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_output.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_paint.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_regiondaily.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_RegionOutput.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_SoilChemistry.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_SoilPhysics.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_summary.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\Dndc_tool.cpp : \
+	".\Dndc_tool.h"\
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\DNDCgo.cpp : \
+	".\DNDCgo.h"\
+	".\Link.h"\
+	".\Source_main.h"\
+	
+
+.\DNDCgo.rc : \
+	".\res\DNDCgo.rc2"\
+	
+
+.\StdAfx.cpp : \
+	".\StdAfx.h"\
+	"c:\program files\microsoft visual studio\vc98\include\basetsd.h"\
+	

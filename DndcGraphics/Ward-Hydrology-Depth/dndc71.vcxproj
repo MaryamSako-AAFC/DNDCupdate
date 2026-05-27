@@ -1,0 +1,535 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Template|Win32">
+      <Configuration>Template</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <SccProjectName>"$/dndc71", BAAAAAAA</SccProjectName>
+    <SccLocalPath>.</SccLocalPath>
+    <Keyword>MFCProj</Keyword>
+    <ProjectGuid>{1C54EEEF-00C4-4EA1-B415-9282379EC0E8}</ProjectGuid>
+    <ProjectName>dndc95</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>Static</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\Release\</OutDir>
+    <IntDir>.\Release\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\Debug\</OutDir>
+    <IntDir>.\Debug\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>MaxSpeed</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>./map;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\Release\dndc71.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <ObjectFileName>.\Release\</ObjectFileName>
+      <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
+    </ClCompile>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\Release\dndc71.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Release\dndc71.bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>.\Release\dndc95.exe</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <MinimalRebuild>true</MinimalRebuild>
+      <AdditionalIncludeDirectories>./map;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
+      <BrowseInformation>true</BrowseInformation>
+      <PrecompiledHeaderOutputFile>.\Debug\dndc71.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <ObjectFileName>.\Debug\</ObjectFileName>
+      <ProgramDataBaseFileName>.\Debug\</ProgramDataBaseFileName>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    </ClCompile>
+    <Midl>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>.\Debug\dndc71.tlb</TypeLibraryName>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Debug\dndc71.bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>D:\test\code1\DNDC95\Debug\DNDC95.exe</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\dndc95\Dndc_regiondaily.cpp" />
+    <ClCompile Include="BatchRun.cpp" />
+    <ClCompile Include="CreateInputFile.cpp" />
+    <ClCompile Include="data_set.cpp" />
+    <ClCompile Include="dndc71.cpp" />
+    <ClCompile Include="DNDCgoing.cpp" />
+    <ClCompile Include="dndc_climate.cpp" />
+    <ClCompile Include="dndc_InputFile.cpp" />
+    <ClCompile Include="Dndc_ManningChannel.cpp" />
+    <ClCompile Include="Dndc_ManningLand.cpp" />
+    <ClCompile Include="Dndc_manure11.cpp" />
+    <ClCompile Include="Dndc_manure12.cpp" />
+    <ClCompile Include="dndc_ManureFarmCrops.cpp" />
+    <ClCompile Include="dndc_map.cpp" />
+    <ClCompile Include="dndc_region.cpp" />
+    <ClCompile Include="dndc_RegionFiles.cpp" />
+    <ClCompile Include="dndc_save.cpp" />
+    <ClCompile Include="dndc_site.cpp" />
+    <ClCompile Include="DNDC_SoilProfile.cpp" />
+    <ClCompile Include="dndc_tool.cpp" />
+    <ClCompile Include="dndc_uncertainty.cpp" />
+    <ClCompile Include="dndc_wizard.cpp" />
+    <ClCompile Include="Dndc_YieldPredict.cpp" />
+    <ClCompile Include="DrawDrought.cpp" />
+    <ClCompile Include="ExtractData.cpp" />
+    <ClCompile Include="FarmCompost.cpp" />
+    <ClCompile Include="FarmLagoon.cpp" />
+    <ClCompile Include="GlobeData.cpp" />
+    <ClCompile Include="GlobeDataExtract.cpp" />
+    <ClCompile Include="GlobeMap.cpp" />
+    <ClCompile Include="GlobeResult.cpp" />
+    <ClCompile Include="graphexDoc.cpp" />
+    <ClCompile Include="graphexView.cpp" />
+    <ClCompile Include="graph_maker.cpp" />
+    <ClCompile Include="Help_AutoFert.cpp" />
+    <ClCompile Include="ListFile.cpp" />
+    <ClCompile Include="MainFrm.cpp" />
+    <ClCompile Include="ManureApplication.cpp" />
+    <ClCompile Include="ManureCompost.cpp" />
+    <ClCompile Include="ManureCycle.cpp" />
+    <ClCompile Include="ManureDigester.cpp" />
+    <ClCompile Include="ManureField.cpp" />
+    <ClCompile Include="ManureGrazing.cpp" />
+    <ClCompile Include="ManureHousing.cpp" />
+    <ClCompile Include="ManureLagoon.cpp" />
+    <ClCompile Include="ManureSilo.cpp" />
+    <ClCompile Include="MapLayer.cpp" />
+    <ClCompile Include="MapSelect.cpp" />
+    <ClCompile Include="Map\font.cpp" />
+    <ClCompile Include="Map\map.cpp" />
+    <ClCompile Include="Map\moaddresslocation.cpp" />
+    <ClCompile Include="Map\mochartrenderer.cpp" />
+    <ClCompile Include="Map\moclassbreaksrenderer.cpp" />
+    <ClCompile Include="Map\modataconnection.cpp" />
+    <ClCompile Include="Map\modatum.cpp" />
+    <ClCompile Include="Map\modotdensityrenderer.cpp" />
+    <ClCompile Include="Map\moellipse.cpp" />
+    <ClCompile Include="Map\moeventrenderer.cpp" />
+    <ClCompile Include="Map\mofield.cpp" />
+    <ClCompile Include="Map\mofields.cpp" />
+    <ClCompile Include="Map\mogeocoder.cpp" />
+    <ClCompile Include="Map\mogeocoordsys.cpp" />
+    <ClCompile Include="Map\mogeodataset.cpp" />
+    <ClCompile Include="Map\mogeodatasets.cpp" />
+    <ClCompile Include="Map\mogeoevent.cpp" />
+    <ClCompile Include="Map\mogeotransformation.cpp" />
+    <ClCompile Include="Map\mogrouprenderer.cpp" />
+    <ClCompile Include="Map\moimagelayer.cpp" />
+    <ClCompile Include="Map\molabelplacer.cpp" />
+    <ClCompile Include="Map\molabelrenderer.cpp" />
+    <ClCompile Include="Map\molayers.cpp" />
+    <ClCompile Include="Map\moline.cpp" />
+    <ClCompile Include="Map\momaplayer.cpp" />
+    <ClCompile Include="Map\moparts.cpp" />
+    <ClCompile Include="Map\moplacelocator.cpp" />
+    <ClCompile Include="Map\mopoint.cpp" />
+    <ClCompile Include="Map\mopoints.cpp" />
+    <ClCompile Include="Map\mopolygon.cpp" />
+    <ClCompile Include="Map\moprimemeridian.cpp" />
+    <ClCompile Include="Map\moprojcoordsys.cpp" />
+    <ClCompile Include="Map\moprojection.cpp" />
+    <ClCompile Include="Map\morecordset.cpp" />
+    <ClCompile Include="Map\morectangle.cpp" />
+    <ClCompile Include="Map\mospheroid.cpp" />
+    <ClCompile Include="Map\mostandardizer.cpp" />
+    <ClCompile Include="Map\mostatistics.cpp" />
+    <ClCompile Include="Map\mostrings.cpp" />
+    <ClCompile Include="Map\mosymbol.cpp" />
+    <ClCompile Include="Map\motable.cpp" />
+    <ClCompile Include="Map\motabledesc.cpp" />
+    <ClCompile Include="Map\motextsymbol.cpp" />
+    <ClCompile Include="Map\motrackinglayer.cpp" />
+    <ClCompile Include="Map\mounit.cpp" />
+    <ClCompile Include="Map\movaluemaprenderer.cpp" />
+    <ClCompile Include="Map\mozrenderer.cpp" />
+    <ClCompile Include="MonteCarlo.cpp" />
+    <ClCompile Include="MonteCarloNote.cpp" />
+    <ClCompile Include="MonteCarloParameters.cpp" />
+    <ClCompile Include="MonteCarloRegionSelect.cpp" />
+    <ClCompile Include="msado15.cpp" />
+    <ClCompile Include="NewCrop.cpp" />
+    <ClCompile Include="ombineFiles.cpp" />
+    <ClCompile Include="ReadDNDfile.cpp" />
+    <ClCompile Include="RegionInput.cpp" />
+    <ClCompile Include="RegionMap.cpp" />
+    <ClCompile Include="RegionSelectCrops.cpp" />
+    <ClCompile Include="RegionYear.cpp" />
+    <ClCompile Include="region_Shangrila.cpp" />
+    <ClCompile Include="RunoffCN.cpp" />
+    <ClCompile Include="SaveDNDfile.cpp" />
+    <ClCompile Include="SaveSoilYear.cpp" />
+    <ClCompile Include="ScreenMonitor.cpp" />
+    <ClCompile Include="SCSDlg.cpp" />
+    <ClCompile Include="SelectIrriFile.cpp" />
+    <ClCompile Include="SelectRegionDlg.cpp" />
+    <ClCompile Include="SelectShapeMap.cpp" />
+    <ClCompile Include="SitePage1.cpp" />
+    <ClCompile Include="SitePage10.cpp" />
+    <ClCompile Include="SitePage11.cpp" />
+    <ClCompile Include="SitePage15.cpp" />
+    <ClCompile Include="SitePage2.cpp" />
+    <ClCompile Include="SitePage3.cpp" />
+    <ClCompile Include="SitePage4.cpp" />
+    <ClCompile Include="SitePage5.cpp" />
+    <ClCompile Include="SitePage6.cpp" />
+    <ClCompile Include="SitePage7.cpp" />
+    <ClCompile Include="SitePage8.cpp" />
+    <ClCompile Include="SitePage9.cpp" />
+    <ClCompile Include="SitePara.cpp" />
+    <ClCompile Include="SitePSheet.cpp" />
+    <ClCompile Include="StdAfx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">stdafx.h</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdafx.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="WizardCrops.cpp" />
+    <ClCompile Include="WizardResult.cpp" />
+    <ClCompile Include="WizardUncertainty.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="hlp\AfxCore.rtf" />
+    <CustomBuild Include="hlp\AfxPrint.rtf" />
+    <CustomBuild Include="hlp\dndc71.cnt">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">copy "hlp\%(Filename).cnt" $(OutDir)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Copying contents file...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\$(InputName).cnt;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">copy "hlp\%(Filename).cnt" $(OutDir)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Copying contents file...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\$(InputName).cnt;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="res\dndc71.rc2" />
+    <CustomBuild Include="RES\Hand.cur" />
+    <CustomBuild Include="RES\Pan.cur" />
+    <CustomBuild Include="RES\ZoomIn.cur" />
+    <CustomBuild Include="RES\ZoomOut.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="dndc71.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BatchRun.h" />
+    <ClInclude Include="CreateInputFile.h" />
+    <ClInclude Include="data_set.h" />
+    <ClInclude Include="dndc71.h" />
+    <ClInclude Include="DNDCgoing.h" />
+    <ClInclude Include="dndc_main.h" />
+    <ClInclude Include="Dndc_ManningChannel.h" />
+    <ClInclude Include="Dndc_ManningLand.h" />
+    <ClInclude Include="Dndc_manure11.h" />
+    <ClInclude Include="Dndc_manure12.h" />
+    <ClInclude Include="dndc_ManureFarmCrops.h" />
+    <ClInclude Include="dndc_map.h" />
+    <ClInclude Include="dndc_RegionFiles.h" />
+    <ClInclude Include="dndc_save.h" />
+    <ClInclude Include="DNDC_SoilProfile.h" />
+    <ClInclude Include="dndc_tool.h" />
+    <ClInclude Include="Dndc_YieldPredict.h" />
+    <ClInclude Include="dprintf.h" />
+    <ClInclude Include="DrawDrought.h" />
+    <ClInclude Include="ExtractData.h" />
+    <ClInclude Include="FarmCompost.h" />
+    <ClInclude Include="FarmLagoon.h" />
+    <ClInclude Include="gd.h" />
+    <ClInclude Include="gdcache.h" />
+    <ClInclude Include="gdfontg.h" />
+    <ClInclude Include="gdfontl.h" />
+    <ClInclude Include="gdfontmb.h" />
+    <ClInclude Include="gdfonts.h" />
+    <ClInclude Include="gdfontt.h" />
+    <ClInclude Include="gdfx.h" />
+    <ClInclude Include="gdhelpers.h" />
+    <ClInclude Include="gd_io.h" />
+    <ClInclude Include="GlobeData.h" />
+    <ClInclude Include="GlobeDataExtract.h" />
+    <ClInclude Include="GlobeMap.h" />
+    <ClInclude Include="GlobeResult.h" />
+    <ClInclude Include="graphexDoc.h" />
+    <ClInclude Include="graphexView.h" />
+    <ClInclude Include="graph_maker.h" />
+    <ClInclude Include="Help_AutoFert.h" />
+    <ClInclude Include="K:\include\dirent.h" />
+    <ClInclude Include="ListFile.h" />
+    <ClInclude Include="MainFrm.h" />
+    <ClInclude Include="ManureApplication.h" />
+    <ClInclude Include="ManureCompost.h" />
+    <ClInclude Include="ManureCycle.h" />
+    <ClInclude Include="ManureDigester.h" />
+    <ClInclude Include="ManureField.h" />
+    <ClInclude Include="ManureGrazing.h" />
+    <ClInclude Include="ManureHousing.h" />
+    <ClInclude Include="ManureLagoon.h" />
+    <ClInclude Include="ManurePen.h" />
+    <ClInclude Include="ManureSilo.h" />
+    <ClInclude Include="MapLayer.h" />
+    <ClInclude Include="MapObjects2.h" />
+    <ClInclude Include="MapSelect.h" />
+    <ClInclude Include="Map\font.h" />
+    <ClInclude Include="Map\map.h" />
+    <ClInclude Include="Map\moaddresslocation.h" />
+    <ClInclude Include="Map\mochartrenderer.h" />
+    <ClInclude Include="Map\moclassbreaksrenderer.h" />
+    <ClInclude Include="Map\modataconnection.h" />
+    <ClInclude Include="Map\modatum.h" />
+    <ClInclude Include="Map\modotdensityrenderer.h" />
+    <ClInclude Include="Map\moellipse.h" />
+    <ClInclude Include="Map\moeventrenderer.h" />
+    <ClInclude Include="Map\mofield.h" />
+    <ClInclude Include="Map\mofields.h" />
+    <ClInclude Include="Map\mogeocoder.h" />
+    <ClInclude Include="Map\mogeocoordsys.h" />
+    <ClInclude Include="Map\mogeodataset.h" />
+    <ClInclude Include="Map\mogeodatasets.h" />
+    <ClInclude Include="Map\mogeoevent.h" />
+    <ClInclude Include="Map\mogeotransformation.h" />
+    <ClInclude Include="Map\mogrouprenderer.h" />
+    <ClInclude Include="Map\moimagelayer.h" />
+    <ClInclude Include="Map\molabelplacer.h" />
+    <ClInclude Include="Map\molabelrenderer.h" />
+    <ClInclude Include="Map\molayers.h" />
+    <ClInclude Include="Map\moline.h" />
+    <ClInclude Include="Map\momaplayer.h" />
+    <ClInclude Include="Map\moparts.h" />
+    <ClInclude Include="Map\moplacelocator.h" />
+    <ClInclude Include="Map\mopoint.h" />
+    <ClInclude Include="Map\mopoints.h" />
+    <ClInclude Include="Map\mopolygon.h" />
+    <ClInclude Include="Map\moprimemeridian.h" />
+    <ClInclude Include="Map\moprojcoordsys.h" />
+    <ClInclude Include="Map\moprojection.h" />
+    <ClInclude Include="Map\morecordset.h" />
+    <ClInclude Include="Map\morectangle.h" />
+    <ClInclude Include="Map\mospheroid.h" />
+    <ClInclude Include="Map\mostandardizer.h" />
+    <ClInclude Include="Map\mostatistics.h" />
+    <ClInclude Include="Map\mostrings.h" />
+    <ClInclude Include="Map\mosymbol.h" />
+    <ClInclude Include="Map\motable.h" />
+    <ClInclude Include="Map\motabledesc.h" />
+    <ClInclude Include="Map\motextsymbol.h" />
+    <ClInclude Include="Map\motrackinglayer.h" />
+    <ClInclude Include="Map\mounit.h" />
+    <ClInclude Include="Map\movaluemaprenderer.h" />
+    <ClInclude Include="Map\mozrenderer.h" />
+    <ClInclude Include="MonteCarlo.h" />
+    <ClInclude Include="MonteCarloNote.h" />
+    <ClInclude Include="MonteCarloParameters.h" />
+    <ClInclude Include="MonteCarloRegionSelect.h" />
+    <ClInclude Include="msado15.h" />
+    <ClInclude Include="NewCrop.h" />
+    <ClInclude Include="NewDBase.h" />
+    <ClInclude Include="ombineFiles.h" />
+    <ClInclude Include="RegionInput.h" />
+    <ClInclude Include="RegionMap.h" />
+    <ClInclude Include="RegionSelectCrops.h" />
+    <ClInclude Include="RegionYear.h" />
+    <CustomBuild Include="Resource.h">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">echo. &gt;"hlp\$(TargetName).hm" 
+echo // Commands (ID_* and IDM_*) &gt;&gt;"hlp\$(TargetName).hm" 
+makehm ID_,HID_,0x10000 IDM_,HIDM_,0x10000 resource.h &gt;&gt;"hlp\$(TargetName).hm" 
+echo. &gt;&gt;"hlp\$(TargetName).hm" 
+echo // Prompts (IDP_*) &gt;&gt;"hlp\$(TargetName).hm" 
+makehm IDP_,HIDP_,0x30000 resource.h &gt;&gt;"hlp\$(TargetName).hm" 
+echo. &gt;&gt;"hlp\$(TargetName).hm" 
+echo // Resources (IDR_*) &gt;&gt;"hlp\$(TargetName).hm" 
+makehm IDR_,HIDR_,0x20000 resource.h &gt;&gt;"hlp\$(TargetName).hm" 
+echo. &gt;&gt;"hlp\$(TargetName).hm" 
+echo // Dialogs (IDD_*) &gt;&gt;"hlp\$(TargetName).hm" 
+makehm IDD_,HIDD_,0x20000 resource.h &gt;&gt;"hlp\$(TargetName).hm" 
+echo. &gt;&gt;"hlp\$(TargetName).hm" 
+echo // Frame Controls (IDW_*) &gt;&gt;"hlp\$(TargetName).hm" 
+makehm IDW_,HIDW_,0x50000 resource.h &gt;&gt;"hlp\$(TargetName).hm" </Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Making help include file...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">hlp\$(TargetName).hm;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">echo. &gt;"hlp\$(TargetName).hm" 
+echo // Commands (ID_* and IDM_*) &gt;&gt;"hlp\$(TargetName).hm" 
+makehm ID_,HID_,0x10000 IDM_,HIDM_,0x10000 resource.h &gt;&gt;"hlp\$(TargetName).hm" 
+echo. &gt;&gt;"hlp\$(TargetName).hm" 
+echo // Prompts (IDP_*) &gt;&gt;"hlp\$(TargetName).hm" 
+makehm IDP_,HIDP_,0x30000 resource.h &gt;&gt;"hlp\$(TargetName).hm" 
+echo. &gt;&gt;"hlp\$(TargetName).hm" 
+echo // Resources (IDR_*) &gt;&gt;"hlp\$(TargetName).hm" 
+makehm IDR_,HIDR_,0x20000 resource.h &gt;&gt;"hlp\$(TargetName).hm" 
+echo. &gt;&gt;"hlp\$(TargetName).hm" 
+echo // Dialogs (IDD_*) &gt;&gt;"hlp\$(TargetName).hm" 
+makehm IDD_,HIDD_,0x20000 resource.h &gt;&gt;"hlp\$(TargetName).hm" 
+echo. &gt;&gt;"hlp\$(TargetName).hm" 
+echo // Frame Controls (IDW_*) &gt;&gt;"hlp\$(TargetName).hm" 
+makehm IDW_,HIDW_,0x50000 resource.h &gt;&gt;"hlp\$(TargetName).hm" </Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Making help include file...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">hlp\$(TargetName).hm;%(Outputs)</Outputs>
+    </CustomBuild>
+    <ClInclude Include="RunoffCN.h" />
+    <ClInclude Include="SaveSoilYear.h" />
+    <ClInclude Include="ScreenMonitor.h" />
+    <ClInclude Include="SCSDlg.h" />
+    <ClInclude Include="SelectIrriFile.h" />
+    <ClInclude Include="SelectRegionDlg.h" />
+    <ClInclude Include="SelectShapeMap.h" />
+    <ClInclude Include="SitePage1.h" />
+    <ClInclude Include="SitePage10.h" />
+    <ClInclude Include="SitePage11.h" />
+    <ClInclude Include="SitePage15.h" />
+    <ClInclude Include="SitePage2.h" />
+    <ClInclude Include="SitePage3.h" />
+    <ClInclude Include="SitePage4.h" />
+    <ClInclude Include="SitePage5.h" />
+    <ClInclude Include="SitePage6.h" />
+    <ClInclude Include="SitePage7.h" />
+    <ClInclude Include="SitePage8.h" />
+    <ClInclude Include="SitePage9.h" />
+    <ClInclude Include="SitePara.h" />
+    <ClInclude Include="SitePSheet.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="Version.h" />
+    <ClInclude Include="WizardCrops.h" />
+    <ClInclude Include="WizardResult.h" />
+    <ClInclude Include="WizardUncertainty.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="hlp\AppExit.bmp" />
+    <Image Include="hlp\Bullet.bmp" />
+    <Image Include="hlp\CurArw2.bmp" />
+    <Image Include="hlp\CurArw4.bmp" />
+    <Image Include="hlp\CurHelp.bmp" />
+    <Image Include="hlp\EditCopy.bmp" />
+    <Image Include="hlp\EditCut.bmp" />
+    <Image Include="hlp\EditPast.bmp" />
+    <Image Include="hlp\EditUndo.bmp" />
+    <Image Include="hlp\FileNew.bmp" />
+    <Image Include="hlp\FileOpen.bmp" />
+    <Image Include="hlp\FilePrnt.bmp" />
+    <Image Include="hlp\FileSave.bmp" />
+    <Image Include="hlp\HlpSBar.bmp" />
+    <Image Include="hlp\HlpTBar.bmp" />
+    <Image Include="hlp\RecFirst.bmp" />
+    <Image Include="hlp\RecLast.bmp" />
+    <Image Include="hlp\RecNext.bmp" />
+    <Image Include="hlp\RecPrev.bmp" />
+    <Image Include="hlp\Scmax.bmp" />
+    <Image Include="hlp\ScMenu.bmp" />
+    <Image Include="hlp\Scmin.bmp" />
+    <Image Include="RES\BITMAP1.BMP" />
+    <Image Include="res\dndc71.ico" />
+    <Image Include="res\graphexDoc.ico" />
+    <Image Include="RES\menu2.bmp" />
+    <Image Include="res\Toolbar.bmp" />
+    <Image Include="RES\toolbar1.bmp" />
+    <Image Include="sdi.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DNDC95\DNDCgo.vcxproj">
+      <Project>{3d7e28d0-baad-4a1b-9fda-df92a33bf4a8}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
