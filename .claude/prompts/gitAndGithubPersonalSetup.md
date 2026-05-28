@@ -1,8 +1,8 @@
-# Git & GitHub Setup
+# Git & GitHub Setup #
 
 A guide on how to setup a simple personal workflow using git and GitHub.
 
-## A little Terminology
+## A little Terminology ##
 
 | Term| Definition |
 |-----|------------|
@@ -11,13 +11,13 @@ A guide on how to setup a simple personal workflow using git and GitHub.
 | Git | A version control system — a program that tracks changes in files |
 | GitHub | A cloud-based hosting platform for git repositories |
 
-## Prerequisites
+## Prerequisites ##
 
 - Check that you have git with `git --version`. If you do not have git, please install it before continuing, along with Git Bash.
 - Make a GitHub account at [github.com](https://github.com) if you do not have one already. Have GitHub open in your browser before continuing.
 - Preferably use Git Bash as your terminal going forward.
 
-## Initial Setup
+## Initial Setup ##
 
 1. Navigate to your desired folder in the terminal.
 2. Initialize git:
@@ -60,19 +60,59 @@ A guide on how to setup a simple personal workflow using git and GitHub.
     ```
     On first push you will be prompted to log in. Use your GitHub username and your PAT as the password. Future pushes will not prompt for credentials.
 
-## Super Basic Day-to-Day Workflow
+## Super Basic Day-to-Day Workflow ##
 
 1. Pull latest changes before starting work to avoid conflicts:
    ```bash
    git pull origin main
    ```
 2. Make your changes.
-3. Stage and commit:
+3. Check status:
+   ```bash
+   git status
+   ```
+4. Stage and commit:
    ```bash
    git add .
    git commit -m "message"
    ```
-4. Push:
+5. Push:
    ```bash
    git push origin main
    ```
+
+### Common Issue ###
+---
+```bash
+error: src refspec main does not match any
+error: failed to push some refs to 'github repo link'
+```
+Check that your branch is the same name as your remote repository branch name (whatever the branch is called on github).\
+It is usually called main remotely, but could be called master locally.\
+You can check this with:
+```bash
+git branch -a
+```
+which will give you an output as such:
+```bash
+* master
+  remotes/origin/main
+```
+You can see the issue as `master` does not match with `remotes/origin/main`. To fix this rename `master` to `main` with:
+```bash
+git branch -m master main
+```
+Now if you check the names again with:
+```bash
+git branch -a
+```
+You should get:
+```bash
+* main
+  remotes/origin/main
+```
+Now try pushing again with:
+```bash
+git push origin main
+```
+The push should work after this fix.
