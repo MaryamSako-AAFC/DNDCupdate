@@ -235,7 +235,7 @@ void  WINAPI Cell_end(int S_SimuYears, int ii_ha, char* DatabaseName, char* Scen
 	
 	class_model *DNDC;
 
-	if(!(DNDC = new class_model() )) 
+	if(!(DNDC = new class_model())) 
 			AfxMessageBox("No enough memory to run modelClass()");
 	else
 	{
