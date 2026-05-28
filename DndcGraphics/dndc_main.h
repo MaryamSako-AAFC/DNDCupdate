@@ -15,7 +15,7 @@
 #include "graphexView.h"
 
 #define BASE 
-//#define CONSOLE
+#define CONSOLE
 
 //extern const char* get_path();
 

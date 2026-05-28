@@ -10,7 +10,7 @@
 #include "dndc_tool.h"
 
 #define BASE
-//#define CONSOLE
+#define CONSOLE
 
 
 //#define MANURE
